@@ -54,6 +54,8 @@ html, body { margin: 0; height: 100%; background: #000; color: #fff; overflow: h
   --cap: 0.729;
 }
 #ui { font-family: var(--osd-menu-font); font-weight: 400; color: var(--c-white); letter-spacing: 0.045em; line-height: 1; }
+/* the OSD text carries a thin dark outline on the console (painted under the fill so the letterforms keep their weight) */
+#ui .screen { paint-order: stroke fill; -webkit-text-stroke: 0.045em rgba(0, 0, 0, 0.85); }
 /* Text is positioned by baseline: an element with line-height 1 puts its baseline at ~0.93 em from the top for this font. */
 .screen { position: absolute; inset: 0; white-space: pre; }
 .bl { position: absolute; transform: translateY(-0.93em); }
@@ -94,7 +96,6 @@ html, body { margin: 0; height: 100%; background: #000; color: #fff; overflow: h
 .config .date { position: absolute; left: 0; transform: translateY(-0.93em); }
 .config .time { position: absolute; right: 0; transform: translateY(-0.93em); display: inline-flex; align-items: baseline; gap: 2.3cqw; }
 .config .date, .config .time-text, .config .clock-value, .config .field { font-variant-numeric: tabular-nums; letter-spacing: 0.10em; }
-.config .pict.clock { height: 3.6cqh; width: 3.6cqh; align-self: center; }
 .config .config-body { position: absolute; left: 67.6cqw; top: 0; width: 0; }
 .config .title { position: absolute; left: 0; top: 44.7cqh; transform: translate(-50%, -0.93em); white-space: nowrap; font-size: calc(4.7cqh / var(--cap)); }
 .config .config-item { position: absolute; left: 0; top: 55.6cqh; transform: translate(-50%, -0.93em); white-space: nowrap; font-size: calc(4.8cqh / var(--cap)); color: var(--c-cyan); }

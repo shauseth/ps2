@@ -1,7 +1,7 @@
 // The OSD screen stack. Layout numbers are percentages of the 4:3 picture measured from reference captures
 // (research/frames-menu-screens.md, typography.md); every screen owns a DOM subtree inside #ui.
 import { el, clear } from './overlay.js';
-import { BUTTON, CLOCK_ICON, ARROWS_UD, ARROW_L, ARROW_R, ARROW_DOWN, ARROW_UP, PS2_GHOST, svg } from './icons.js';
+import { BUTTON, ARROWS_UD, ARROW_L, ARROW_R, ARROW_DOWN, ARROW_UP, PS2_GHOST, svg } from './icons.js';
 import { tr, LANG_NAMES } from './strings.js';
 
 const pad2 = (n) => String(n).padStart(2, '0');
@@ -112,7 +112,7 @@ export class SystemConfig extends Screen {
       { kind: 'lang', values: LANG_NAMES, get: () => s.language, set: (v) => { s.language = v; }, row: false },
     ];
     this.sel = sel; this.editing = false; this.display = true; this.fade = 0;
-    this.top = el('div', 'config-top'); this.date = el('span', 'date'); this.time = el('span', 'time'); this.time.appendChild(svg(CLOCK_ICON)); this.timeText = el('span', 'time-text'); this.ampm = el('span', 'ampm'); this.time.append(this.timeText, this.ampm); this.top.append(this.date, this.time); this.root.appendChild(this.top);
+    this.top = el('div', 'config-top'); this.date = el('span', 'date'); this.time = el('span', 'time'); this.timeText = el('span', 'time-text'); this.ampm = el('span', 'ampm'); this.time.append(this.timeText, this.ampm); this.top.append(this.date, this.time); this.root.appendChild(this.top);
     this.body = el('div', 'config-body'); this.title = el('div', 'title'); this.item = el('div', 'config-item'); this.itemText = el('span', 'config-item-text'); this.arrows = svg(ARROWS_UD); this.item.append(this.itemText, this.arrows); this.value = el('div', 'config-value');
     this.body.append(this.title, this.item, this.value); this.root.appendChild(this.body);
     this.hintRow = el('div'); this.root.appendChild(this.hintRow);
@@ -161,7 +161,7 @@ export class SystemConfig extends Screen {
 export class ClockAdjust extends Screen {
   constructor(osd) {
     super(osd); this.root.className = 'screen config'; const s = osd.app.console.settings; this.s = s;
-    this.top = el('div', 'config-top'); this.date = el('span', 'date'); this.time = el('span', 'time'); this.time.appendChild(svg(CLOCK_ICON)); this.timeText = el('span', 'time-text'); this.ampm = el('span', 'ampm'); this.time.append(this.timeText, this.ampm); this.top.append(this.date, this.time); this.root.appendChild(this.top);
+    this.top = el('div', 'config-top'); this.date = el('span', 'date'); this.time = el('span', 'time'); this.timeText = el('span', 'time-text'); this.ampm = el('span', 'ampm'); this.time.append(this.timeText, this.ampm); this.top.append(this.date, this.time); this.root.appendChild(this.top);
     this.body = el('div', 'config-body'); this.body.appendChild(el('div', 'title', tr(s.language).title));
     const item = el('div', 'config-item editing'); item.appendChild(el('span', 'config-item-text', tr(s.language).items[0])); this.body.appendChild(item);
     this.value = el('div', 'config-value fields'); this.body.appendChild(this.value); this.root.appendChild(this.body);
@@ -197,7 +197,7 @@ export class ClockOptions extends OptionList {
       { label: 'Daylight Savings Time\n(Summer Time)', values: ['Standard (Winter Time)', 'Daylight Savings (Summer Time)'], idx: s.daylight === 'Daylight' ? 1 : 0, onChange: (v) => { s.daylight = v.startsWith('Daylight') ? 'Daylight' : 'Standard'; osd.saveSettings(); } },
     ], { cls: 'screen config config-options', hintList: [['cross', L.enter], ['circle', L.back]] });
     this.s = s;
-    this.top = el('div', 'config-top'); this.date = el('span', 'date'); this.time = el('span', 'time'); this.time.appendChild(svg(CLOCK_ICON)); this.timeText = el('span', 'time-text'); this.ampm = el('span', 'ampm'); this.time.append(this.timeText, this.ampm); this.top.append(this.date, this.time); this.root.appendChild(this.top);
+    this.top = el('div', 'config-top'); this.date = el('span', 'date'); this.time = el('span', 'time'); this.timeText = el('span', 'time-text'); this.ampm = el('span', 'ampm'); this.time.append(this.timeText, this.ampm); this.top.append(this.date, this.time); this.root.appendChild(this.top);
   }
   draw() {
     // one item at a time, like the main list: name (cyan) + value (white) under the title

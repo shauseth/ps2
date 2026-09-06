@@ -107,35 +107,32 @@ export class MenuScene {
       const halo = new THREE.Sprite(new THREE.SpriteMaterial({ map: this.glowTex, color: new THREE.Color(0x30 / 128, 0x62 / 128, 0x80 / 128), transparent: true, opacity: 0.4, blending: THREE.AdditiveBlending, depthWrite: false, depthTest: false }));
       const core = new THREE.Sprite(new THREE.SpriteMaterial({ map: this.coreTex, color: 0xffffff, transparent: true, opacity: 1, blending: THREE.AdditiveBlending, depthWrite: false, depthTest: false }));
       halo.renderOrder = 30; core.renderOrder = 31; s.add(halo, core);
-      this.orbs.push({ halo, core, pos: new THREE.Vector3(), trail: [], theta: (i / 7) * TAU, drift: 0, phase: 0 });
+      this.orbs.push({ halo, core, pos: new THREE.Vector3(), trail: [], theta: (i / 7) * TAU, ang: (i / 7) * TAU, drift: 0, phase: 0 });
     }
     this.sphereN = new THREE.Vector3(0.2, 0.3, 1).normalize();
     // --- rods (overlay, ROM space inside a tilted group) ---
     this.tilt = new THREE.Group(); this.tilt.rotation.set(-3 * D2R, 7 * D2R, 0); this.overlay.add(this.tilt);   // left side and bottom nearer
     this.romOverlay = new THREE.Group(); this.romOverlay.scale.set(1, -1, -1); this.tilt.add(this.romOverlay);
     this.clock = new THREE.Group(); this.romOverlay.add(this.clock);
-    const rodGeo = hexRodGeometry(ROD_LEN, ROD_R); const edgeGeo = new THREE.EdgesGeometry(rodGeo, 25);
+    const rodGeo = hexRodGeometry(ROD_LEN, ROD_R);
     this.rodBackMat = glassMaterial(THREE.BackSide, { refr: 0.2, bodyMix: 0.65, rimGain: 0.25, spec: 0.1 });
     this.rodMat = glassMaterial(THREE.FrontSide, { refr: 0.25, bodyMix: 0.75, rimGain: 0.5, spec: 0.35, zoom: -0.1 });
     this.hourMat = glassMaterial(THREE.FrontSide, { refr: 0.15, bodyMix: 0.85, body: [0.42, 0.78, 0.98], rim: [0.7, 0.95, 1.0], rimGain: 0.8, spec: 0.8, zoom: -0.1 });
     this.hourBackMat = glassMaterial(THREE.BackSide, { refr: 0.15, bodyMix: 0.8, body: [0.3, 0.6, 0.85], rimGain: 0.3, spec: 0.3 });
-    this.edgeMat = new THREE.LineBasicMaterial({ color: 0x9fdcff, transparent: true, opacity: 0.35, depthTest: false });
     this.rods = [];
     for (let i = 0; i < 12; i++) {
       const pivot = new THREE.Group(); pivot.rotation.order = 'ZYX';
       const back = new THREE.Mesh(rodGeo, this.rodBackMat); back.renderOrder = 10; const mesh = new THREE.Mesh(rodGeo, this.rodMat); mesh.renderOrder = 11;
-      const edges = new THREE.LineSegments(edgeGeo, this.edgeMat); edges.renderOrder = 12;
-      pivot.add(back, mesh, edges); pivot.userData = { i, back, mesh }; this.clock.add(pivot); this.rods.push(pivot);
+      pivot.add(back, mesh); pivot.userData = { i, back, mesh }; this.clock.add(pivot); this.rods.push(pivot);
     }
     // --- glass cubes attached to the camera: the list's item icons ---
     this.cubeCam = new THREE.Group(); this.overlay.add(this.cubeCam);
-    const cg = new THREE.BoxGeometry(5.28, 5.28, 5.28); const cubeEdge = new THREE.EdgesGeometry(cg);
+    const cg = new THREE.BoxGeometry(5.28, 5.28, 5.28);
     this.cubes = CUBE_POS.map((p, i) => {
       const back = new THREE.Mesh(cg, glassMaterial(THREE.BackSide, { refr: 0.7, bodyMix: 0.3, body: [0.14, 0.13, 0.2], rimGain: 0.35, spec: 0.35 })); back.renderOrder = 20;
       const front = new THREE.Mesh(cg, glassMaterial(THREE.FrontSide, { refr: 0.8, bodyMix: 0.35, body: [0.16, 0.15, 0.22], rimGain: 1.0, spec: 0.8, zoom: -0.1 })); front.renderOrder = 21;
-      const edges = new THREE.LineSegments(cubeEdge, new THREE.LineBasicMaterial({ color: 0xd8d8f0, transparent: true, opacity: 0.4, depthTest: false })); edges.renderOrder = 22;
-      const g = new THREE.Group(); g.position.set(p[0], -p[1], -p[2]); g.add(back, front, edges); g.visible = false; this.cubeCam.add(g);
-      return { group: g, back: back.material, front: front.material, edges: edges.material, i, bright: 0, scale: 0 };
+      const g = new THREE.Group(); g.position.set(p[0], -p[1], -p[2]); g.add(back, front); g.visible = false; this.cubeCam.add(g);
+      return { group: g, back: back.material, front: front.material, i, bright: 0, scale: 0 };
     });
   }
 
@@ -157,7 +154,7 @@ export class MenuScene {
     this.setLook(look, 0); this.mix = this.mixTarget; this.frame = 0; this.acc = 0; this.entry = 0; this.exitZoom = 0; this.exitTimer = null;
     this.flyOffset = 100; this.orbEase = 0; this.bootCluster = fromBoot ? 1 : 0; this.scatter = 0;
     const rnd = makeRng(this.app.rng.int(1, 1e6)); this.rnd = rnd;
-    for (const o of this.orbs) { o.trail = []; o.phase = rnd() * TAU; o.drift = 0; }
+    for (const o of this.orbs) { o.trail = []; o.phase = rnd() * TAU; o.drift = 0; o.ang = o.theta; }
     if (!this.trailCanvas.isConnected) this.app.ui.appendChild(this.trailCanvas);
     this.app.fade(0, 0.05);
   }
@@ -198,8 +195,16 @@ export class MenuScene {
     if (this.scatter > 0) this.scatter = Math.min(1, this.scatter + 1 / (1.8 * FPS));
     for (let i = 0; i < 7; i++) {
       const o = this.orbs[i];
-      o.drift += (this.rnd() - 0.5) * 0.004; o.drift *= 0.985; o.theta += o.drift * 0.1 + 0.0009;   // slow wander (a few deg/s)
-      const base = o.theta; const th = base + (clusterTheta + o.phase * 0.08 - base) * gatherAll;
+      // Ring anchor: a slow random wander (a few deg/s). The orb's real angle follows it with a soft pull, and the
+      // gather blends *angular velocity* (not position) toward the cluster's, with a sin() pull onto the cluster phase:
+      // continuous everywhere, so the speed ramps smoothly and there is never a wrap-around snap.
+      const ringVel = o.drift * 0.1 + 0.0009;
+      o.drift += (this.rnd() - 0.5) * 0.004; o.drift *= 0.985; o.theta += ringVel;
+      const g = gatherAll, clusterVel = TAU / (2.37 * FPS);
+      o.ang += (1 - g) * ringVel + g * clusterVel;
+      o.ang += g * 0.045 * Math.sin(clusterTheta + o.phase * 0.08 - o.ang);   // gather onto the cluster
+      o.ang += (1 - g) * 0.02 * Math.sin(o.theta - o.ang);                    // ease back to the ring anchor
+      const th = o.ang;
       const el = Math.sin(o.phase + this.frame * 0.003) * 0.35 * (1 - gatherAll);                   // off-ring wobble (sphere, not a flat ring)
       const p = new THREE.Vector3().addScaledVector(u, Math.cos(th) * Math.cos(el) * R).addScaledVector(v, Math.sin(th) * Math.cos(el) * R).addScaledVector(n, Math.sin(el) * R);
       p.y += HUB_Y; // hub
@@ -235,7 +240,6 @@ export class MenuScene {
     }
     this.rodMat.uniforms.body.value.set(idle.r, idle.g, idle.b); this.rodBackMat.uniforms.body.value.set(idle.r * 0.6, idle.g * 0.6, idle.b * 0.7);
     for (const m of [this.rodMat, this.rodBackMat, this.hourMat, this.hourBackMat]) m.uniforms.alpha.value = ringEase;
-    this.edgeMat.opacity = 0.35 * ringEase;
     // cubes: list state only; scale in 0.75 s from +0.35 s; selected one lit blue
     const showCubes = this.mode === 'list' && e > 0.5;
     for (const c of this.cubes) {
@@ -246,7 +250,6 @@ export class MenuScene {
       const body = new THREE.Color(0.16, 0.15, 0.22).lerp(new THREE.Color(0.05, 0.28, 0.9), c.bright);
       c.front.uniforms.body.value.set(body.r, body.g, body.b); c.back.uniforms.body.value.set(body.r * 0.8, body.g * 0.8, body.b * 0.9);
       c.front.uniforms.bodyMix.value = 0.35 + 0.5 * c.bright; c.back.uniforms.bodyMix.value = 0.3 + 0.5 * c.bright;
-      c.edges.color.setRGB(0.85 + 0.1 * c.bright, 0.85 + 0.1 * c.bright, 0.94); c.edges.opacity = 0.4 * c.scale;
     }
     if (e > 0.5) this.configTimer++;
     if (this.exitTimer != null) this.exitTimer++;
