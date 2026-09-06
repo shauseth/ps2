@@ -12,6 +12,7 @@ import { makeRng } from '../rng.js';
 import { el, clear } from '../ui/overlay.js';
 
 const FPS = 60;
+const BOOT_HOLD = 1.3;            // seconds of black between the end of the flythrough and the menu entry
 const TOWER_HALF = 2.2;          // box half-width (pitch is 5.2)
 const STATE_LEVELS = [16, 56, 104, 320, 672, 800, 1160, 1160];
 const DISC_READY_FRAME = 230;    // when a "disc" is identified (variable on real hardware)
@@ -200,7 +201,7 @@ export class BootScene {
     this.mode = mode; this.disc = mode === 'disc'; this.done = false;
     this.buildTowers(history, card);
     // camera state (real InitAnimation)
-    this.frame = 0; this.acc = 0; this.state = 0; this.go = false; this.ended = false; this.discReady = false;
+    this.frame = 0; this.acc = 0; this.state = 0; this.go = false; this.ended = false; this.discReady = false; this.holdLeft = null;
     this.pos = new THREE.Vector3(0, 0, 16); this.rot = -0.12;
     this.pSpeed = [0, 0, 0.04]; this.pAcc1 = [0, 0, 0]; this.pAcc2 = [0, 0, 0]; this.rSpeed = 0.001; this.rAcc = 0;
     this.sceState = 0; this.sceAlpha = 0; this.sceStep = 4;
@@ -283,7 +284,8 @@ export class BootScene {
     // scene end: fade over the last ~0.4 s before z passes 104, then hand over
     const z = this.pos.z; const fo = Math.min(1, Math.max(0, (z - 90) / 14));
     if (fo > 0) this.app.fade(fo, 0);
-    if (this.ended && !this.done) { this.done = true; this.app.onBootDone?.(this.mode); }
+    // hand over after a beat of black (the real console rests ~1.3 s between the fade-out and the orbs flying in)
+    if (this.ended && !this.done) { this.holdLeft = (this.holdLeft ?? BOOT_HOLD) - dt; if (this.holdLeft <= 0) { this.done = true; this.app.onBootDone?.(this.mode); } }
   }
   render() {
     const r = this.app.renderer;

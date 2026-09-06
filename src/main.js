@@ -113,23 +113,6 @@ async function powerOn() {
   bootConsole();
   app.start();
 }
-// No power button: the console boots as soon as the page loads. Browsers only let audio start after a user gesture, so
-// if the context is still suspended when the boot starts, the first tap / key restarts the boot from the top with sound
-// (the picture and the jingle stay in sync). After the boot, a gesture simply resumes audio where it is.
-function armSilentBootRecovery() {
-  const ctx = app.audio.ctx; if (!ctx || ctx.state === 'running') return;
-  const silentBoot = () => app.state === app.scenes.boot;
-  const EVENTS = ['pointerdown', 'touchend', 'click', 'keydown'];
-  const go = () => {
-    ctx.resume().then(() => {
-      if (ctx.state !== 'running') return; // still blocked: keep listening
-      for (const ev of EVENTS) window.removeEventListener(ev, go, true);
-      if (silentBoot()) { app.sounds.stopStartup(); app.audio.master.gain.value = 0; bootConsole(); app.audio.master.gain.value = app.audio.muted ? 0 : 0.9; }
-    }).catch(() => {});
-  };
-  for (const ev of EVENTS) window.addEventListener(ev, go, { capture: true, passive: true });
-}
-
 if (CAPTURE) {
   app.audio.setMuted(true);
   const st = params.get('state') || 'boot';
@@ -155,6 +138,11 @@ if (CAPTURE) {
     },
   };
 } else {
+  // The tube sits black until the visitor clicks, taps or presses a key anywhere; that gesture unlocks audio, so the boot
+  // never runs silent. (click / touchend / keydown count as activations everywhere; pointerdown does not on iOS.)
+  const EVENTS = ['click', 'touchend', 'keydown'];
+  let started = false;
+  const go = (e) => { if (started) return; started = true; if (e.type === 'touchend') e.preventDefault(); for (const ev of EVENTS) window.removeEventListener(ev, go); powerOn(); };
+  for (const ev of EVENTS) window.addEventListener(ev, go);
   window.__ps2 = { app }; // for debugging from the console
-  powerOn().then(armSilentBootRecovery);
 }
