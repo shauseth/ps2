@@ -28,7 +28,7 @@ function towerGrid() {
   } }
   return g;
 }
-// Tower wall texture: a light grey panel/grout pattern (authored, not extracted).
+// Tower wall texture: a plain light grey surface with fine grain (the real towers carry no panel/grid pattern).
 function wallTexture(size = 256) {
   const c = document.createElement('canvas'); c.width = c.height = size; const ctx = c.getContext('2d');
   const rnd = makeRng(41);
@@ -36,10 +36,6 @@ function wallTexture(size = 256) {
   const img = ctx.getImageData(0, 0, size, size); const d = img.data;
   for (let i = 0; i < size * size; i++) { const n = (rnd() - 0.5) * 22; d[i * 4] += n; d[i * 4 + 1] += n; d[i * 4 + 2] += n; }
   ctx.putImageData(img, 0, 0);
-  ctx.strokeStyle = 'rgba(70,74,84,0.28)'; ctx.lineWidth = 2;
-  for (let k = 0; k <= size; k += 32) { ctx.beginPath(); ctx.moveTo(k, 0); ctx.lineTo(k, size); ctx.moveTo(0, k); ctx.lineTo(size, k); ctx.stroke(); }
-  ctx.strokeStyle = 'rgba(255,255,255,0.22)'; ctx.lineWidth = 1;
-  for (let k = 3; k <= size; k += 32) { ctx.beginPath(); ctx.moveTo(k, 0); ctx.lineTo(k, size); ctx.moveTo(0, k); ctx.lineTo(size, k); ctx.stroke(); }
   const tex = new THREE.CanvasTexture(c); tex.wrapS = tex.wrapT = THREE.RepeatWrapping; tex.colorSpace = THREE.SRGBColorSpace; tex.anisotropy = 4; return tex;
 }
 const FEEDBACK_SHADER = {

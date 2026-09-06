@@ -7,11 +7,14 @@ const SR = 48000;
 async function offline(seconds, build) { const ctx = new OfflineAudioContext(2, Math.ceil(seconds * SR), SR); build(ctx, ctx.destination); return ctx.startRendering(); }
 
 export class Sounds {
-  constructor(audio) { this.audio = audio; this.startup = new StartupSound(); this.buffers = {}; this.loops = {}; this.ready = false; this.prepared = null; }
+  constructor(audio) { this.audio = audio; this.startup = new StartupSound(); this.buffers = {}; this.loops = {}; this.ready = false; this.prepared = null; this.startupPrepared = null; }
+  // The boot jingle is what must never be late, so it renders first and on its own promise; the menu set (including the
+  // long ambience loop) follows in the background.
+  prepareStartup() { if (!this.startupPrepared) this.startupPrepared = this.startup.prepare(); return this.startupPrepared; }
   prepare() {
     if (this.prepared) return this.prepared;
     this.prepared = (async () => {
-      await this.startup.prepare();
+      await this.prepareStartup();
       const [tick, confirm, scroll, enterSub, exitSub, del, wash, ambience] = await Promise.all([renderTick(), renderConfirm(), renderScroll(), renderEnterSub(), renderExitSub(), renderDelete(), renderWash(), renderAmbience()]);
       // Gain staging relative to the boot jingle (peak sample -3 dBFS here): confirm -6.5 dB, tick -15, cancel -14, wash -9,
       // scroll = confirm -7, sub-menu sounds much quieter, ambience RMS 18 dB under the jingle's loudest second.
@@ -25,7 +28,14 @@ export class Sounds {
   get ctx() { return this.audio.ctx; }
   get dest() { return this.audio.master; }
   play(name, delay = 0, opts = {}) {
-    const ctx = this.ctx; if (!ctx || !this.ready) return;
+    const ctx = this.ctx; if (!ctx) return;
+    const isBoot = name === 'startup' || name === 'logoHum';
+    if (isBoot ? !this.startup.buffers : !this.ready) {
+      // Buffers are still rendering: play when they land, at the same wall-clock moment (or right away if it has passed).
+      const due = performance.now() + delay * 1000;
+      (isBoot ? this.prepareStartup() : this.prepare()).then(() => this.play(name, Math.max(0, (due - performance.now()) / 1000), opts)).catch(() => {});
+      return;
+    }
     const at = ctx.currentTime + delay;
     if (name === 'startup') return this.startup.start(ctx, this.dest, at, opts);
     if (name === 'logoHum') return this.startup.hit2(ctx, this.dest, at + TIMING.hit2AfterDust);

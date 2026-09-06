@@ -11,6 +11,10 @@ import { seedHistory, advanceHistory } from './history.js';
 
 const params = new URLSearchParams(location.search);
 const CAPTURE = params.has('capture');
+// CRT look: render at the OSD's native 448 lines and let the tube (CSS) upscale it. `?crt=0` gives the clean look back;
+// capture mode stays clean unless `?crt=1` so reference frames keep their resolution.
+const CRT = params.get('crt') ? params.get('crt') !== '0' : !CAPTURE;
+const CRT_LINES = 448;
 
 class App {
   constructor() {
@@ -19,7 +23,8 @@ class App {
     this.ui = document.getElementById('ui');
     this.fadeEl = document.getElementById('fade');
     this.renderer = new THREE.WebGLRenderer({ canvas: this.canvas, antialias: true, powerPreference: 'high-performance', preserveDrawingBuffer: CAPTURE });
-    this.renderer.setPixelRatio(CAPTURE ? 1 : Math.min(window.devicePixelRatio || 1, 2));
+    this.renderer.setPixelRatio(CAPTURE || CRT ? 1 : Math.min(window.devicePixelRatio || 1, 2));
+    if (CRT) this.picture.classList.add('crt');
     this.renderer.outputColorSpace = THREE.SRGBColorSpace;
     this.input = new Input();
     this.audio = new AudioEngine();
@@ -34,9 +39,16 @@ class App {
     window.addEventListener('resize', () => this.resize());
     this.input.addEventListener('press', (e) => this.state?.onPress?.(e.detail.button));
   }
+  // System Configuration > Screen Size: '4:3' letterboxes a 4:3 picture, '16:9' a widescreen one, 'Full' fills the window.
+  applyScreenSize(size = this.console?.settings?.screenSize) {
+    this.picture.classList.toggle('wide', size === '16:9');
+    this.picture.classList.toggle('fill', size === 'Full');
+    this.resize();
+  }
   resize() {
     const r = this.picture.getBoundingClientRect();
-    this.width = Math.max(1, Math.round(r.width)); this.height = Math.max(1, Math.round(r.height));
+    const scale = CRT ? Math.min(1, CRT_LINES / Math.max(1, r.height)) : 1;
+    this.width = Math.max(1, Math.round(r.width * scale)); this.height = Math.max(1, Math.round(r.height * scale));
     this.renderer.setSize(this.width, this.height, false);
     for (const s of Object.values(this.scenes)) s.resize?.(this.width, this.height);
   }
@@ -73,6 +85,7 @@ app.scenes.boot = new BootScene(app);
 app.scenes.menu = new MenuScene(app);
 app.console = loadState();
 if (!app.console.history.length || !('mask' in app.console.history[0])) app.console.history = seedHistory();
+app.applyScreenSize();
 app.osd = new OSD(app);
 // Menu state wraps the 3D background scene and the OSD screen stack.
 app.scenes.menuState = {
@@ -92,15 +105,32 @@ function bootConsole() {
   app.setState(app.scenes.boot, { history: app.console.history, card, mode: params.get('disc') ? 'disc' : 'menu' });
 }
 
-function powerOn() {
-  document.getElementById('power').hidden = true;
+async function powerOn() {
   app.audio.ensure();
+  // The boot jingle is synthesized offline; give it a moment to finish so it lines up with the picture (the screen stays
+  // black meanwhile). If it takes longer, boot anyway: play() defers the jingle until the buffers land.
+  await Promise.race([app.sounds.prepareStartup().catch(() => {}), new Promise((r) => setTimeout(r, 6000))]);
   bootConsole();
   app.start();
 }
+// No power button: the console boots as soon as the page loads. Browsers only let audio start after a user gesture, so
+// if the context is still suspended when the boot starts, the first tap / key restarts the boot from the top with sound
+// (the picture and the jingle stay in sync). After the boot, a gesture simply resumes audio where it is.
+function armSilentBootRecovery() {
+  const ctx = app.audio.ctx; if (!ctx || ctx.state === 'running') return;
+  const silentBoot = () => app.state === app.scenes.boot;
+  const EVENTS = ['pointerdown', 'touchend', 'click', 'keydown'];
+  const go = () => {
+    ctx.resume().then(() => {
+      if (ctx.state !== 'running') return; // still blocked: keep listening
+      for (const ev of EVENTS) window.removeEventListener(ev, go, true);
+      if (silentBoot()) { app.sounds.stopStartup(); app.audio.master.gain.value = 0; bootConsole(); app.audio.master.gain.value = app.audio.muted ? 0 : 0.9; }
+    }).catch(() => {});
+  };
+  for (const ev of EVENTS) window.addEventListener(ev, go, { capture: true, passive: true });
+}
 
 if (CAPTURE) {
-  document.getElementById('power').hidden = true;
   app.audio.setMuted(true);
   const st = params.get('state') || 'boot';
   if (st === 'boot') bootConsole(); else if (st === 'menu') app.setState(app.scenes.menuState, { screen: params.get('screen') || 'main' }); else app.setState(app.scenes.menuState, { screen: 'main' });
@@ -125,8 +155,6 @@ if (CAPTURE) {
     },
   };
 } else {
-  const gate = document.getElementById('power'); gate.hidden = false;
-  const go = () => { powerOn(); window.removeEventListener('keydown', go); gate.removeEventListener('pointerdown', go); };
-  gate.addEventListener('pointerdown', go);
-  window.addEventListener('keydown', go);
+  window.__ps2 = { app }; // for debugging from the console
+  powerOn().then(armSilentBootRecovery);
 }

@@ -141,7 +141,7 @@ export class MenuScene {
 
   setLook(look, seconds = 0) {
     const prev = this.look; this.look = look; this.mixTarget = look === 'config' ? 1 : 0; this.mixSpeed = seconds > 0 ? 1 / seconds : 1e9;
-    if (look === 'config' && prev !== 'config') { this.configTimer = 0; for (const c of this.cubes) c.scale = 0; }
+    if (look === 'config' && prev !== 'config') { this.configTimer = 0; this.exitTimer = null; for (const c of this.cubes) c.scale = 0; }
     if (look !== 'config' && prev === 'config') this.exitTimer = 0;
     if ((look === 'browser' || look === 'save' || look === 'logo') && prev === 'main') this.exitZoom = 0.0001;
     if (look === 'main' && prev !== 'main') this.exitZoom = 0;

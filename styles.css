@@ -3,6 +3,7 @@ html, body { margin: 0; height: 100%; background: #000; color: #fff; overflow: h
 #tv { position: fixed; inset: 0; display: flex; align-items: center; justify-content: center; background: #000; }
 /* The real OSD is a 4:3 picture; we letterbox/pillarbox it like a TV. */
 #picture { position: relative; aspect-ratio: 4 / 3; width: min(100vw, calc(100vh * 4 / 3)); height: min(100vh, calc(100vw * 3 / 4)); overflow: hidden; background: #000; container-type: size; }
+#picture.wide { aspect-ratio: 16 / 9; width: min(100vw, calc(100vh * 16 / 9)); height: min(100vh, calc(100vw * 9 / 16)); }
 #picture.fill { width: 100vw; height: 100vh; aspect-ratio: auto; }
 #gl { position: absolute; inset: 0; width: 100%; height: 100%; display: block; transition: filter .35s ease; }
 #picture[data-blur="1"] #gl { filter: blur(0.28cqh); }
@@ -11,17 +12,28 @@ html, body { margin: 0; height: 100%; background: #000; color: #fff; overflow: h
 #ui.pending .screen, #ui.pending .screen * { visibility: hidden !important; }
 #ui .clickable { pointer-events: auto; cursor: pointer; }
 #fade { position: absolute; inset: 0; background: #000; opacity: 1; pointer-events: none; }
-/* Power-on gate: browsers need a user gesture before audio may play. */
-#power { position: fixed; inset: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 1.2rem; background: #000; z-index: 10; }
-#power[hidden] { display: none; }
-#power-btn { background: none; border: 0; color: #cfd3d6; cursor: pointer; display: flex; flex-direction: column; align-items: center; gap: .6rem; font: inherit; }
-#power-btn .ring { width: 3.2rem; height: 3.2rem; border-radius: 50%; border: 2px solid #6d7378; position: relative; box-shadow: 0 0 0 6px #111; }
-#power-btn .ring::after { content: ''; position: absolute; left: 50%; top: 18%; width: 2px; height: 34%; background: #6d7378; transform: translateX(-50%); }
-#power-btn:hover .ring, #power-btn:focus-visible .ring { border-color: #7fd3ff; box-shadow: 0 0 18px #2a9df4aa, 0 0 0 6px #111; }
-#power-btn:hover .ring::after, #power-btn:focus-visible .ring::after { background: #7fd3ff; }
-#power-btn .label { letter-spacing: .3em; font-size: .7rem; color: #8b9094; }
-#power .hint { color: #4a4f53; font-size: .8rem; margin: 0; }
-#power .keys { color: #3a3f43; font-size: .7rem; margin: 0; letter-spacing: .04em; }
+/* --- CRT television (year-2000 consumer tube) --- */
+#crt { display: none; }
+#picture.crt { border-radius: 4cqh / 4.5cqh; }
+/* the picture is rendered at 448 lines and upscaled: keep the upscale soft, then add a little phosphor bloom */
+#picture.crt #gl { filter: blur(0.09cqh) saturate(1.12) contrast(1.04); }
+#picture.crt[data-blur="1"] #gl { filter: blur(0.32cqh) saturate(1.12) contrast(1.04); }
+#picture.crt #ui { filter: blur(0.07cqh); }
+#picture.crt #ui .screen { text-shadow: 0 0 0.7cqh rgba(255, 255, 255, 0.28); }
+#picture.crt #crt {
+  display: block; position: absolute; inset: 0; pointer-events: none; z-index: 5;
+  background:
+    /* vignette: dim corners and edges like a tube's fall-off */
+    radial-gradient(ellipse 78% 82% at 50% 50%, rgba(0, 0, 0, 0) 60%, rgba(0, 0, 0, 0.32) 88%, rgba(0, 0, 0, 0.62) 100%),
+    /* scanlines: one dark gap per pair of lines of a 480i field */
+    repeating-linear-gradient(to bottom, rgba(0, 0, 0, 0) 0, rgba(0, 0, 0, 0) 0.21cqh, rgba(0, 0, 0, 0.26) 0.21cqh, rgba(0, 0, 0, 0.26) 0.42cqh),
+    /* shadow mask: faint RGB phosphor triads */
+    repeating-linear-gradient(to right, rgba(255, 40, 40, 0.05) 0, rgba(255, 40, 40, 0.05) 0.18cqh, rgba(40, 255, 40, 0.05) 0.18cqh, rgba(40, 255, 40, 0.05) 0.36cqh, rgba(40, 40, 255, 0.05) 0.36cqh, rgba(40, 40, 255, 0.05) 0.54cqh);
+  box-shadow: inset 0 0 6cqh rgba(0, 0, 0, 0.55);
+  animation: crt-flicker 0.12s steps(2) infinite;
+}
+@keyframes crt-flicker { 0% { opacity: 1; } 100% { opacity: 0.92; } }
+@media (prefers-reduced-motion: reduce) { #picture.crt #crt { animation: none; } }
 /* --- OSD typography (font choice pending research; see typography.md) --- */
 /* TeX Gyre Heros (GUST Font License, assets/fonts/GUST-FONT-LICENSE.txt): a Helvetica-metric clone, the closest free match
    to the OSD's rom0:FONTM letterforms (research/typography.md). Cap height = 0.729 em. */

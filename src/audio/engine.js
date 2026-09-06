@@ -5,12 +5,32 @@ export class AudioEngine {
     this.master = null;
     this.muted = false;
   }
+  // Call from inside a user gesture (click / touchend / keydown). Creates the context, unlocks it, and keeps it running
+  // across iOS interruptions, tab switches and the silent switch.
   ensure() {
-    if (this.ctx) { if (this.ctx.state === 'suspended') this.ctx.resume(); return this.ctx; }
+    if (this.ctx) { this.resume(); return this.ctx; }
     const AC = window.AudioContext || window.webkitAudioContext;
     this.ctx = new AC({ latencyHint: 'interactive' });
     this._build(this.ctx);
+    // iOS 17+: a 'playback' session plays through the ring/silent switch, like a video would.
+    try { if (navigator.audioSession && 'type' in navigator.audioSession) navigator.audioSession.type = 'playback'; } catch (e) { /* noop */ }
+    this._unlock(this.ctx);
+    this.resume();
+    // Re-arm whenever the browser pauses us: state changes ('interrupted' on iOS), coming back to the tab, or any later gesture.
+    this.ctx.addEventListener?.('statechange', () => { if (this.ctx.state !== 'running') this.resume(); });
+    document.addEventListener('visibilitychange', () => { if (!document.hidden) this.resume(); });
+    window.addEventListener('focus', () => this.resume());
+    window.addEventListener('pageshow', () => this.resume());
+    for (const ev of ['pointerdown', 'touchend', 'click', 'keydown']) window.addEventListener(ev, () => this.resume(), { passive: true, capture: true });
     return this.ctx;
+  }
+  resume() {
+    const ctx = this.ctx; if (!ctx || ctx.state === 'running' || ctx.state === 'closed') return Promise.resolve();
+    return ctx.resume().catch(() => { /* not in a gesture yet; the listeners above will try again */ });
+  }
+  // Older iOS only unlocks a context after a source has been started inside the gesture.
+  _unlock(ctx) {
+    try { const b = ctx.createBuffer(1, 1, ctx.sampleRate); const s = ctx.createBufferSource(); s.buffer = b; s.connect(ctx.destination); s.start(0); } catch (e) { /* noop */ }
   }
   _build(ctx) {
     this.master = ctx.createGain();

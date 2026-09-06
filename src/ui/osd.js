@@ -15,16 +15,17 @@ export function fmtTime(d, fmt = '24-hour') {
 }
 export function fmtStamp(osd, stamp) { const m = stamp.match(/(\d{4})\/(\d{2})\/(\d{2}) (\d{1,2}):(\d{2}):(\d{2})/); const d = m ? new Date(+m[1], +m[2] - 1, +m[3], +m[4], +m[5], +m[6]) : new Date(stamp); const s = osd.app.console.settings; const t = fmtTime(d, s.timeFormat); return `${fmtDate(d, s.dateFormat)}\u00a0\u00a0${t.text}${t.ampm ? '\u00a0' + t.ampm : ''}`; }
 function label(text) { const b = el('span'); const m = text.match(/^(.*?)(\(PS2\))(.*)$/); if (!m) { b.textContent = text; return b; } b.append(m[1], el('span', 'small', m[2]), m[3]); return b; }
+let hintInput = null; // set by Screen so the button hints can fire presses when clicked/tapped
 function hints(list) {
   const row = el('div', 'osd-hints');
-  for (const [btn, text] of list) { const h = el('span', 'hint'); h.dataset.btn = btn; h.appendChild(svg(BUTTON[btn])); h.appendChild(el('span', 'hint-label', text)); row.appendChild(h); }
+  for (const [btn, text] of list) { const h = el('span', 'hint clickable'); h.dataset.btn = btn; h.appendChild(svg(BUTTON[btn])); h.appendChild(el('span', 'hint-label', text)); h.addEventListener('click', () => hintInput?.press(btn, 'pointer')); row.appendChild(h); }
   return row;
 }
 function iconEl(sv, cls = 'save-icon') { const ic = el('div', cls); ic.style.setProperty('--c', sv.icon.color); ic.style.setProperty('--c2', sv.icon.color2 || sv.icon.color); ic.dataset.shape = sv.icon.shape; return ic; }
 const step = (list, cur, dir) => { const n = cur + dir; return n >= 0 && n < list.length ? n : cur; };
 
 class Screen {
-  constructor(osd) { this.osd = osd; this.root = el('div', 'screen'); this.t = 0; }
+  constructor(osd) { this.osd = osd; this.root = el('div', 'screen'); this.t = 0; hintInput = osd.app.input; }
   mount() { this.osd.app.ui.appendChild(this.root); }
   unmount() { this.root.remove(); }
   update(dt) { this.t += dt; }
@@ -104,7 +105,7 @@ export class SystemConfig extends Screen {
     const s = osd.app.console.settings; this.s = s;
     this.items = [
       { kind: 'clock' },
-      { values: ['4:3', 'Full', '16:9'], get: () => s.screenSize, set: (v) => { s.screenSize = v; }, row: true },
+      { values: ['4:3', 'Full', '16:9'], get: () => s.screenSize, set: (v) => { s.screenSize = v; osd.app.applyScreenSize(v); }, row: true },
       { values: ['On', 'Off'], get: () => s.digitalOut, set: (v) => { s.digitalOut = v; }, row: true },
       { values: ['Y Cb/Pb Cr/Pr', 'RGB'], get: () => s.componentOut, set: (v) => { s.componentOut = v; }, row: true },
       { values: ['Gameplay Function On', 'Gameplay Function Off'], get: () => s.remote, set: (v) => { s.remote = v; }, row: false },
