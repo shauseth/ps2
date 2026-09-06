@@ -1,5 +1,7 @@
 :root { color-scheme: dark; }
 html, body { margin: 0; height: 100%; background: #000; color: #fff; overflow: hidden; font-family: system-ui, sans-serif; }
+#tv-hint { position: fixed; left: 1.2rem; top: 1rem; z-index: 6; font: 0.8rem/1.5 system-ui, sans-serif; letter-spacing: 0.04em; color: #7c8085; pointer-events: none; transition: opacity .4s linear; }
+#tv-hint[hidden] { display: none !important; }
 #tv { position: fixed; inset: 0; cursor: pointer; touch-action: manipulation; -webkit-tap-highlight-color: transparent; display: flex; align-items: center; justify-content: center; background: #000; }
 /* The real OSD is a 4:3 picture; we letterbox/pillarbox it like a TV. */
 #picture { position: relative; aspect-ratio: 4 / 3; width: min(100vw, calc(100vh * 4 / 3)); height: min(100vh, calc(100vw * 3 / 4)); overflow: hidden; background: #000; container-type: size; }
@@ -128,19 +130,15 @@ html, body { margin: 0; height: 100%; background: #000; color: #fff; overflow: h
 .memcard .save-title { position: absolute; right: 3.5cqw; top: 11.5cqh; transform: translateY(-0.93em); color: var(--c-yellow); font-size: calc(3.5cqh / var(--cap)); text-align: right; line-height: 1.71; }
 .save-glow { position: absolute; width: 16cqw; height: 16cqh; border-radius: 50%; background: radial-gradient(closest-side, rgba(255,255,255,.95), rgba(255,255,255,.4) 40%, rgba(255,255,255,0) 72%); opacity: 0; }
 .save-cell.selected .save-glow { opacity: 1; }
-.save-icon { position: relative; width: 7cqh; height: 7cqh; filter: drop-shadow(0 0.6cqh 0.8cqh rgba(0,0,0,.5)); }
-.save-icon.big { position: absolute; left: 12cqw; top: 32cqh; width: 20cqh; height: 20cqh; }
-.save-icon::before { content: ''; position: absolute; inset: 0; background: linear-gradient(145deg, var(--c), var(--c2)); }
-.save-icon[data-shape="card"]::before { inset: 4% 14%; border-radius: 4%; }
-.save-icon[data-shape="box"]::before, .save-icon[data-shape="crate"]::before { inset: 8%; border-radius: 6%; box-shadow: inset 0 0 0 0.35cqh rgba(0,0,0,.35); }
-.save-icon[data-shape="orb"]::before, .save-icon[data-shape="katamari"]::before { border-radius: 50%; background: radial-gradient(circle at 35% 30%, #fff8, transparent 40%), radial-gradient(circle at 50% 50%, var(--c), var(--c2)); }
-.save-icon[data-shape="star"]::before { clip-path: polygon(50% 0, 61% 35%, 98% 35%, 68% 57%, 79% 91%, 50% 70%, 21% 91%, 32% 57%, 2% 35%, 39% 35%); }
-.save-icon[data-shape="crown"]::before { clip-path: polygon(0 100%, 0 30%, 25% 55%, 50% 10%, 75% 55%, 100% 30%, 100% 100%); }
-.save-icon[data-shape="car"]::before { inset: 25% 5% 20% 5%; border-radius: 30% 30% 12% 12%; }
-.save-icon[data-shape="horse"]::before, .save-icon[data-shape="silhouette"]::before { clip-path: polygon(20% 100%, 20% 45%, 35% 30%, 55% 30%, 70% 10%, 85% 18%, 78% 40%, 80% 100%, 66% 100%, 62% 60%, 40% 60%, 34% 100%); }
-.save-icon[data-shape="wrench"]::before, .save-icon[data-shape="cane"]::before, .save-icon[data-shape="brush"]::before, .save-icon[data-shape="blade"]::before { inset: 0 38%; border-radius: 30%; transform: rotate(35deg); }
-.save-icon[data-shape="crest"]::before { clip-path: polygon(50% 0, 100% 20%, 90% 70%, 50% 100%, 10% 70%, 0 20%); }
-.save-icon[data-shape="ps2"]::before { inset: 20% 30%; border-radius: 3%; }
+/* 3D save icons: CSS faces on a tilted, slowly turning stage (see ui/icon3d.js); --u is the object's unit size */
+.save-icon { position: relative; width: 7cqh; height: 7cqh; --u: 4.6cqh; perspective: calc(var(--u) * 5); }
+.save-icon.big { position: absolute; left: 12cqw; top: 33cqh; width: 26cqh; height: 35cqh; --u: 16cqh; }
+.save-icon .i3d { position: absolute; inset: 0; transform-style: preserve-3d; transform: rotateX(-16deg); }
+.save-icon .spin { position: absolute; inset: 0; transform-style: preserve-3d; animation: i3d-spin 9s linear infinite; }
+.save-icon .g { position: absolute; inset: 0; transform-style: preserve-3d; }
+.save-icon .f { position: absolute; left: 50%; top: 50%; backface-visibility: hidden; background: linear-gradient(160deg, var(--c) 0%, color-mix(in srgb, var(--c) 55%, var(--c2)) 55%, var(--c2) 100%); filter: brightness(var(--l, 1)); box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.08); }
+.save-icon .f.tri { clip-path: polygon(50% 0, 100% 100%, 0 100%); box-shadow: none; }
+@keyframes i3d-spin { from { transform: rotateY(0deg); } to { transform: rotateY(360deg); } }
 .memcard .loading { position: absolute; left: 48.4cqw; top: 53.6cqh; transform: translate(-50%, -0.93em); white-space: nowrap; font-size: calc(4.4cqh / var(--cap)); color: #fdfefd; }
 .memcard .arrow-up { position: absolute; left: 48.4cqw; top: 15.4cqh; width: 3.2cqw; height: 2cqh; }
 .memcard .arrow-down { position: absolute; left: 48.4cqw; top: 82.5cqh; width: 3.2cqw; height: 2cqh; }
@@ -180,7 +178,7 @@ html, body { margin: 0; height: 100%; background: #000; color: #fff; overflow: h
 .browser .ps2ghost { left: 4.4cqw; top: 8cqh; height: 3.5cqh; width: 6.4cqw; }
 /* memory-card models: card 1 centred at 37.9 % W, card 2 at 62.2 % W, y 53.6 %; ~11.8 % W x 16 % H */
 .mc-slot { position: absolute; top: 45.9cqh; width: 11.8cqw; height: 16cqh; border-radius: 0.6cqh 0.6cqh 0.9cqh 0.9cqh; background: linear-gradient(180deg, #2a2a28 0%, #141414 8%, #0d0d0d 40%, #0a0b0a 100%); box-shadow: 0 0.8cqh 1.6cqh rgba(0,0,0,.5); transform-origin: 50% 50%; transition: transform .35s ease-in; }
-.mc-slot[data-slot="0"] { left: 32.0cqw; } .mc-slot[data-slot="1"] { left: 56.4cqw; transform: scale(1.03); }
+.mc-slot[data-slot="0"] { left: 17.1cqw; } .mc-slot[data-slot="1"] { left: 35.1cqw; transform: scale(1.02); } .mc-slot[data-slot="2"] { left: 53.1cqw; } .mc-slot[data-slot="3"] { left: 71.1cqw; transform: scale(1.02); }
 .mc-slot::before { content: ''; position: absolute; left: 44%; width: 12%; top: 5%; height: 6%; background: #3a3a38; clip-path: polygon(0 100%, 50% 0, 100% 100%); }
 .mc-slot::after { content: ''; position: absolute; left: 9%; right: 9%; top: 46%; height: 34%; background: #111; box-shadow: inset 0 0 0 1px #262626, 0 0.2cqh 0 #2c2c2a; }
 .mc-slot.selected { background: linear-gradient(180deg, #333 0%, #1c1c1c 8%, #161616 40%, #121312 100%); }
@@ -193,7 +191,7 @@ html, body { margin: 0; height: 100%; background: #000; color: #fff; overflow: h
 .browser { perspective: 60cqw; }
 /* disc under card 1 when a disc is inserted; cards move up to 44 % */
 .browser.with-disc .mc-slot { top: 38cqh; }
-.disc-icon { position: absolute; left: 34cqw; top: 57cqh; width: 12cqw; height: 11cqh; border-radius: 50%; background: radial-gradient(circle at 50% 50%, #f3f3f4 0%, #f3f3f4 18%, #b9b3a0 20%, #e8dcaa 40%, #fffcc6 60%, #d9cf9c 100%); transform: rotateX(40deg) rotateZ(-15deg); box-shadow: 0 0 2cqh 0.5cqh rgba(255,250,200,.45); }
+.disc-icon { position: absolute; left: 44cqw; top: 60cqh; width: 12cqw; height: 11cqh; border-radius: 50%; background: radial-gradient(circle at 50% 50%, #f3f3f4 0%, #f3f3f4 18%, #b9b3a0 20%, #e8dcaa 40%, #fffcc6 60%, #d9cf9c 100%); transform: rotateX(40deg) rotateZ(-15deg); box-shadow: 0 0 2cqh 0.5cqh rgba(255,250,200,.45); }
 .disc-icon[hidden] { display: none !important; }
 /* card contents: header card square, rows centred (5 per row at 21/35/50/65/80 %), rows at y 32/50/69 %, blue "more" arrow */
 .memcard .mc-icon-slot { left: 5cqw; top: 7.6cqh; width: 5cqw; height: 6cqh; background: #040404; box-shadow: inset 0 0 0 1px #828282; border-radius: 0; }
@@ -206,7 +204,7 @@ html, body { margin: 0; height: 100%; background: #000; color: #fff; overflow: h
 .save-row:nth-child(1) { top: 32cqh; } .save-row:nth-child(2) { top: 50.5cqh; } .save-row:nth-child(3) { top: 69cqh; } .save-row:nth-child(4) { top: 87.5cqh; } .save-row:nth-child(5) { top: 106cqh; } .save-row:nth-child(6) { top: 124.5cqh; }
 .save-cell { position: absolute; top: 0; width: 12cqw; height: 14cqh; display: flex; align-items: center; justify-content: center; transform: translate(-50%, -50%) scale(var(--pop, 1)); left: calc(50cqw + (var(--k) - (var(--n) - 1) / 2) * 14.5cqw); opacity: 1; }
 .save-cell.shown { opacity: 1; }
-.memcard .save-cell > .save-icon, .ghost-grid .save-icon { width: 9cqh; height: 9cqh; }
+.memcard .save-cell > .save-icon, .ghost-grid .save-icon { width: 9cqh; height: 9cqh; --u: 6cqh; }
 .save-glow { width: 12cqw; height: 16cqh; }
 .memcard .arrow-down { left: 48.4cqw; top: 79cqh; width: 3.3cqw; height: 2.6cqh; }
 .memcard .arrow-down path, .memcard .arrow-up path { fill: #1b2f9f; }
@@ -216,26 +214,26 @@ html, body { margin: 0; height: 100%; background: #000; color: #fff; overflow: h
 .save-page::before { content: ''; position: absolute; inset: 0; background: linear-gradient(160deg, color-mix(in srgb, var(--bg) 100%, #fff 14%) 0%, var(--bg) 55%, color-mix(in srgb, var(--bg) 70%, #000) 100%); opacity: 0.92; }
 .save-page.fade-in { animation-duration: .4s; }
 .ghost-grid { opacity: 0.25; }
-.save-icon.big { left: 12cqw; top: 33cqh; width: 26cqh; height: 35cqh; animation: icon-spin 8s linear infinite; }
-.save-icon.medium { position: absolute; left: 30cqw; top: 22cqh; width: 6cqw; height: 14cqh; }
-@keyframes icon-spin { from { transform: perspective(40cqh) rotateY(0deg); } to { transform: perspective(40cqh) rotateY(360deg); } }
+.save-icon.medium { position: absolute; left: 30cqw; top: 22cqh; width: 6cqw; height: 14cqh; --u: 7.5cqh; }
 .save-info { left: 68cqw; }
 .save-loc { top: 23cqh; font-size: calc(2.9cqh / var(--cap)); color: #b0b0b0; }
 .save-name { top: 30cqh; font-size: calc(4.6cqh / var(--cap)); line-height: 1.35; }
 .save-meta { top: 42cqh; font-size: calc(2.7cqh / var(--cap)); color: #b0b0b0; }
-.save-size { top: 46cqh; font-size: calc(2.7cqh / var(--cap)); color: #b0b0b0; }
+.save-size { top: 46cqh; font-size: calc(2.4cqh / var(--cap)); color: #9a9a9a; }
+.save-page .save-name .l1, .save-page .save-name .l2 { display: block; } .save-page .save-name .l2 { font-size: 0.52em; line-height: 1.3; color: #d8d8c8; }
+.save-desc { position: absolute; left: 38cqw; width: 59cqw; top: 50.5cqh; transform: translateY(-0.93em); white-space: normal; text-align: left; font-size: calc(2.2cqh / var(--cap)); line-height: 1.42; color: #d8d8d4; }
 .save-opt { font-size: calc(5.1cqh / var(--cap)); color: #585a5e; }
-.save-opt[data-i="0"] { top: 61cqh; } .save-opt[data-i="1"] { top: 69cqh; }
+.save-opt[data-i="0"] { top: 74.5cqh; } .save-opt[data-i="1"] { top: 82.5cqh; }
 .save-opt.selected { color: var(--c-cyan); } .save-opt.heading { color: var(--c-yellow); }
 .copy-arrow { top: 63cqh; font-size: calc(3cqh / var(--cap)); color: #7d7b7a; }
 .copy-target { top: 69cqh; font-size: calc(3.7cqh / var(--cap)); color: var(--c-cyan); display: flex; gap: 2cqw; align-items: baseline; }
 .copy-target.heading { color: var(--c-yellow); top: 61cqh; }
-.save-opt.heading[data-i="1"] { top: 61cqh; }
+.save-opt.heading[data-i="1"] { top: 74.5cqh; }
 .copy-target .pict { height: 3cqh; width: 2cqh; align-self: center; } .copy-target .pict path { fill: #4b717c; }
 .copy-free { top: 74cqh; font-size: calc(2cqh / var(--cap)); color: #b0b0b0; }
-.save-prompt { position: absolute; left: 50cqw; top: 86cqh; transform: translate(-50%, -0.93em); white-space: nowrap; font-size: calc(3.3cqh / var(--cap)); color: #b0b0b0; }
-.sure { top: 69cqh; font-size: calc(4.5cqh / var(--cap)); color: #c8c8c8; }
-.yesno { top: 77cqh; display: flex; gap: 5cqw; }
+.save-prompt { position: absolute; left: 50cqw; top: 88cqh; transform: translate(-50%, -0.93em); white-space: nowrap; font-size: calc(3.3cqh / var(--cap)); color: #b0b0b0; }
+.sure { top: 82.5cqh; font-size: calc(4.5cqh / var(--cap)); color: #c8c8c8; }
+.yesno { top: 89cqh; display: flex; gap: 5cqw; }
 .yesno .yn { position: static; transform: none; font-size: calc(4.5cqh / var(--cap)); color: #6c928d; } .yesno .yn.selected { color: var(--c-cyan); }
 .dim { opacity: 0.4; }
 .info { background: linear-gradient(112deg, #8b8b8d 0%, #4c4c48 48%, #060600 100%); }

@@ -1,7 +1,7 @@
 // OSD controller: screen stack, background look, transitions, clock, memory-card data, sounds, disc.
 import { SCREENS } from './ui/osd.js';
 import { saveState } from './state.js';
-import { defaultCards } from './saves.js';
+import { personalCards, CONTENT_VERSION } from './content.js';
 
 const LOOK = { main: 'main', version: 'main', psDriver: 'main', dvdPlayer: 'main', config: 'config', clockAdjust: 'config', clockOptions: 'config', browser: 'browser', memoryCard: 'browser', saveOptions: 'save', saveInfo: 'save', logo: 'logo' };
 
@@ -11,8 +11,8 @@ export class OSD {
     // A SCPH-70012 slim: values as the real Version Information screen lists them for that model.
     this.model = { console: 'SCPH-70012', browser: '1.40', cdPlayer: '2.00', psDriver: '1.11', dvdPlayer: '3.10U', mac: '00:19:C5:2A:7B:1E' };
     this.clockOffset = 0;
-    if (!app.console.cards) app.console.cards = defaultCards();
-    if (app.console.disc == null) app.console.disc = false;
+    if (!app.console.cards || app.console.contentVersion !== CONTENT_VERSION) { app.console.cards = personalCards(); app.console.contentVersion = CONTENT_VERSION; app.console.disc = true; saveState(app.console); }
+    if (app.console.disc == null) app.console.disc = true;
   }
   now() { return new Date(Date.now() + this.clockOffset + (this.app.clockAdvance || 0)); }
   setClock(d) { this.clockOffset = d.getTime() - Date.now(); this.app.scenes.menu.clockOffset = this.clockOffset; }
@@ -82,16 +82,18 @@ export class OSD {
   }
   // ---- disc ----
   toggleDisc() { this.app.console.disc = !this.app.console.disc; saveState(this.app.console); const t = this.top(); if (t && t.draw && t.root.classList.contains('browser')) t.draw(); return this.app.console.disc; }
+  // Links open from inside the button press, which is still the user's gesture, so the browser allows the new tab.
+  openLink(url) { try { window.open(url, '_blank', 'noopener'); } catch (e) { /* blocked */ } }
   bootDisc() {
     if (this.busy) return; this.busy = true;
     this.app.fade(1, 0.4);                                                                  // Browser fades to black, ~5 s while the drive spins up
     this.after(0.5, () => { this.top()?.unmount(); this.stack.push({ name: 'logo', args: {}, screen: null }); });
     this.after(5.0, () => { const s = new SCREENS.logo(this); this.stack[this.stack.length - 1].screen = s; s.mount(); this.app.picture.dataset.look = 'logo'; this.app.fade(0, 0); this.app.sounds?.play('logoHum'); });
   }
-  afterLogo() { this.app.fade(1, 0); this.stack.pop()?.screen?.unmount(); const b = this.stack[this.stack.length - 1]; if (b && b.name === 'browser') { b.screen = new SCREENS.browser(this, { sel: 2, fadeIn: true }); b.screen.mount(); this.app.picture.dataset.look = 'browser'; } else this.reset('main'); this.app.fade(0, 0.3); this.busy = false; }
+  afterLogo() { this.app.fade(1, 0); this.stack.pop()?.screen?.unmount(); const b = this.stack[this.stack.length - 1]; if (b && b.name === 'browser') { b.screen = new SCREENS.browser(this, { sel: this.app.console.cards.length, fadeIn: true }); b.screen.mount(); this.app.picture.dataset.look = 'browser'; } else this.reset('main'); this.app.fade(0, 0.3); this.busy = false; }
   press(b) { if (this.busy) return; this.top()?.press(b); }
   wordmarkSVG() {
     // Recreated "PlayStation(R)2" logotype as flowing text (proportions from the reference frames; not a Sony asset)
-    return `<span class="wm-word">PlayStation</span><span class="wm-reg">®</span><span class="wm-two">2</span>`;
+    return `<span class="wm-word">PersonalStation</span><span class="wm-reg">®</span><span class="wm-two">2</span>`;
   }
 }

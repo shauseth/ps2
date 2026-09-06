@@ -3,6 +3,9 @@
 import { el, clear } from './overlay.js';
 import { BUTTON, ARROWS_UD, ARROW_L, ARROW_R, ARROW_DOWN, ARROW_UP, PS2_GHOST, svg } from './icons.js';
 import { tr, LANG_NAMES } from './strings.js';
+import { icon3d } from './icon3d.js';
+import { CARDS, RESUME_URL } from '../content.js';
+const cardLabel = (slot) => `Memory Card (${CARDS[slot].tag})/${slot + 1}`;
 
 const pad2 = (n) => String(n).padStart(2, '0');
 export function fmtDate(d, fmt = 'YYYY/MM/DD') {
@@ -14,14 +17,14 @@ export function fmtTime(d, fmt = '24-hour') {
   return { text: `${pad2(d.getHours())}:${pad2(d.getMinutes())}:${pad2(d.getSeconds())}`, ampm: '' };
 }
 export function fmtStamp(osd, stamp) { const m = stamp.match(/(\d{4})\/(\d{2})\/(\d{2}) (\d{1,2}):(\d{2}):(\d{2})/); const d = m ? new Date(+m[1], +m[2] - 1, +m[3], +m[4], +m[5], +m[6]) : new Date(stamp); const s = osd.app.console.settings; const t = fmtTime(d, s.timeFormat); return `${fmtDate(d, s.dateFormat)}\u00a0\u00a0${t.text}${t.ampm ? '\u00a0' + t.ampm : ''}`; }
-function label(text) { const b = el('span'); const m = text.match(/^(.*?)(\(PS2\))(.*)$/); if (!m) { b.textContent = text; return b; } b.append(m[1], el('span', 'small', m[2]), m[3]); return b; }
+function label(text) { const b = el('span'); const m = text.match(/^(.*?)(\((?:PS2|[A-Z]{2,9})\))(.*)$/); if (!m) { b.textContent = text; return b; } b.append(m[1], el('span', 'small', m[2]), m[3]); return b; }
 let hintInput = null; // set by Screen so the button hints can fire presses when clicked/tapped
 function hints(list) {
   const row = el('div', 'osd-hints');
   for (const [btn, text] of list) { const h = el('span', 'hint clickable'); h.dataset.btn = btn; h.appendChild(svg(BUTTON[btn])); h.appendChild(el('span', 'hint-label', text)); h.addEventListener('click', () => hintInput?.press(btn, 'pointer')); row.appendChild(h); }
   return row;
 }
-function iconEl(sv, cls = 'save-icon') { const ic = el('div', cls); ic.style.setProperty('--c', sv.icon.color); ic.style.setProperty('--c2', sv.icon.color2 || sv.icon.color); ic.dataset.shape = sv.icon.shape; return ic; }
+function iconEl(sv, cls = 'save-icon') { return icon3d(sv.icon, cls); }
 const step = (list, cur, dir) => { const n = cur + dir; return n >= 0 && n < list.length ? n : cur; };
 
 class Screen {
@@ -36,7 +39,7 @@ class Screen {
 export class MainMenu extends Screen {
   constructor(osd, { sel = 0 } = {}) {
     super(osd); this.root.className = 'screen main-menu';
-    this.items = ['Browser', 'System Configuration']; this.sel = sel;
+    this.items = ['resume', 'system configuration']; this.sel = sel;
     this.list = el('div', 'menu-list');
     this.els = this.items.map((t, i) => { const e = el('div', 'menu-item clickable', t); e.addEventListener('click', () => { if (this.sel !== i) { this.sel = i; this.osd.sfx('tick'); this.draw(); } else this.osd.app.input.press('cross', 'pointer'); }); this.list.appendChild(e); return e; });
     this.root.appendChild(this.list); this.root.appendChild(hints([['cross', 'Enter'], ['triangle', 'Version']])); this.draw();
@@ -227,30 +230,34 @@ export class Browser extends Screen {
     super(osd); this.root.className = 'screen browser';
     this.root.appendChild(svg(PS2_GHOST));
     this.label = el('div', 'browser-label'); this.root.appendChild(this.label);
-    this.slots = [0, 1].map((i) => { const s = el('div', 'mc-slot clickable'); s.dataset.slot = String(i); s.addEventListener('click', () => { if (this.sel !== i) { this.sel = i; this.osd.sfx('tick'); this.draw(); } else this.osd.app.input.press('cross', 'pointer'); }); s.appendChild(el('div', 'mc-glow')); this.root.appendChild(s); return s; });
-    this.disc = el('div', 'disc-icon clickable'); this.disc.appendChild(el('div', 'mc-glow')); this.disc.addEventListener('click', () => { if (this.sel !== 2) { this.sel = 2; this.osd.sfx('tick'); this.draw(); } else this.osd.app.input.press('cross', 'pointer'); }); this.root.appendChild(this.disc);
+    this.n = CARDS.length; // the disc is index n
+    this.slots = CARDS.map((c, i) => { const s = el('div', 'mc-slot clickable'); s.dataset.slot = String(i); s.addEventListener('click', () => { if (this.sel !== i) { this.sel = i; this.osd.sfx('tick'); this.draw(); } else this.osd.app.input.press('cross', 'pointer'); }); s.appendChild(el('div', 'mc-glow')); this.root.appendChild(s); return s; });
+    this.disc = el('div', 'disc-icon clickable'); this.disc.appendChild(el('div', 'mc-glow')); this.disc.addEventListener('click', () => { if (this.sel !== this.n) { this.sel = this.n; this.osd.sfx('tick'); this.draw(); } else this.osd.app.input.press('cross', 'pointer'); }); this.root.appendChild(this.disc);
     this.hintEl = hints([['cross', 'Enter'], ['circle', 'Back']]); this.root.appendChild(this.hintEl);
     this.sel = sel; this.flip = 0; if (fadeIn) { this.root.classList.add('fade-in'); }
     this.draw();
   }
   get hasDisc() { return !!this.osd.app.console.disc; }
   draw() {
-    const slots = this.hasDisc ? 3 : 2; if (this.sel >= slots) this.sel = 0;
-    this.slots.forEach((s, i) => s.classList.toggle('selected', i === this.sel)); this.disc.hidden = !this.hasDisc; this.disc.classList.toggle('selected', this.sel === 2);
+    const n = this.n; if (this.sel > n || (this.sel === n && !this.hasDisc)) this.sel = 0;
+    this.slots.forEach((s, i) => s.classList.toggle('selected', i === this.sel)); this.disc.hidden = !this.hasDisc; this.disc.classList.toggle('selected', this.sel === n);
     this.root.classList.toggle('with-disc', this.hasDisc);
-    clear(this.label); this.label.appendChild(this.sel === 2 ? label('PlayStation®2 DISC') : label(`Memory Card (PS2)/${this.sel + 1}`));
+    clear(this.label); this.label.appendChild(this.sel === n ? label('Résumé (PDF) DISC') : label(cardLabel(this.sel)));
   }
   update(dt) { super.update(dt); const g = 0.85 + 0.15 * Math.sin(this.t * 2 * Math.PI / 3); this.root.style.setProperty('--breathe', g.toFixed(3)); if (this.flip > 0) { this.flip -= dt; } }
   press(b) {
     if (this.flip > 0) return;
-    const n = this.hasDisc ? 3 : 2;
-    if (b === 'left' || b === 'right') { let s = this.sel + (b === 'right' ? 1 : -1); if (s === 2 && n === 3) s = b === 'right' ? 0 : 1; if (s >= 0 && s < 2 && s !== this.sel) { this.sel = s; this.osd.sfx('tick'); this.draw(); } }
-    else if (b === 'up' || b === 'down') { if (n === 3) { const s = b === 'down' ? 2 : 0; if (s !== this.sel) { this.sel = s; this.osd.sfx('tick'); this.draw(); } } }
-    else if (b === 'cross') { if (this.sel === 2) { this.osd.sfx('confirm'); this.osd.bootDisc(); } else { this.osd.sfx('memcard'); this.flip = 0.4; this.slots[this.sel].classList.add('flip'); this.root.classList.add('flipping'); const slot = this.sel; this.osd.after(0.35, () => this.osd.push('memoryCard', { slot })); } }
+    const n = this.n;
+    if (b === 'left' || b === 'right') { if (this.sel === n) return; const s = this.sel + (b === 'right' ? 1 : -1); if (s >= 0 && s < n) { this.sel = s; this.osd.sfx('tick'); this.draw(); } }
+    else if (b === 'up' || b === 'down') { if (!this.hasDisc) return; const s = b === 'down' ? n : (this.sel === n ? this.lastCard || 0 : this.sel); if (s !== this.sel) { if (this.sel < n) this.lastCard = this.sel; this.sel = s; this.osd.sfx('tick'); this.draw(); } }
+    else if (b === 'cross') {
+      if (this.sel === n) { this.osd.sfx('confirm'); this.osd.openLink(RESUME_URL); this.osd.bootDisc(); }
+      else { this.osd.sfx('memcard'); this.flip = 0.4; this.slots[this.sel].classList.add('flip'); this.root.classList.add('flipping'); const slot = this.sel; this.osd.after(0.35, () => this.osd.push('memoryCard', { slot })); }
+    }
     else if (b === 'circle') { this.osd.leaveBrowser(); }
   }
 }
-// Memory card contents: icons pop in one by one while "Loading..." shows.
+// Memory card contents: icons pop in one by one while "loading..." shows.
 export class MemoryCard extends Screen {
   constructor(osd, { slot = 0, sel = 0, scroll = 0, loaded = false } = {}) {
     super(osd); this.root.className = 'screen memcard'; this.slot = slot; this.saves = osd.app.console.cards[slot];
@@ -258,7 +265,7 @@ export class MemoryCard extends Screen {
     this.root.appendChild(el('div', 'mc-icon-slot'));
     this.saveTitle = el('div', 'save-title'); this.root.appendChild(this.saveTitle);
     this.grid = el('div', 'save-grid'); this.root.appendChild(this.grid);
-    this.loading = el('div', 'loading', 'Loading...'); this.root.appendChild(this.loading);
+    this.loading = el('div', 'loading', 'loading...'); this.root.appendChild(this.loading);
     this.up = svg(ARROW_UP); this.down = svg(ARROW_DOWN); this.root.append(this.up, this.down);
     this.sel = sel; this.cols = 5; this.rowsVisible = 3; this.scroll = scroll;
     this.hintsFull = hints([['cross', 'Enter'], ['circle', 'Back'], ['triangle', 'Options']]); this.hintsLoad = hints([['circle', 'Back']]); this.root.append(this.hintsFull, this.hintsLoad);
@@ -271,7 +278,7 @@ export class MemoryCard extends Screen {
   get loaded() { return this.t >= this.doneAt; }
   draw() {
     const free = this.osd.freeKB(this.slot);
-    clear(this.headTitle); this.headTitle.appendChild(label(`Memory Card (PS2)/${this.slot + 1}`)); this.headFree.textContent = `${free.toLocaleString('en-US')} KB Free`;
+    clear(this.headTitle); this.headTitle.appendChild(label(cardLabel(this.slot))); this.headFree.textContent = `${free.toLocaleString('en-US')} KB Free`;
     this.head.style.opacity = this.t > 0.5 ? '1' : '0';
     this.loading.hidden = this.loaded || this.t < 0.5; this.hintsFull.hidden = !this.loaded; this.hintsLoad.hidden = this.loaded;
     this.cells.forEach((c, i) => { const k = Math.min(1, Math.max(0, (this.t - this.popAt[i]) / 0.3)); c.style.setProperty('--pop', String(k)); c.classList.toggle('selected', i === this.sel && this.t > 0.8); });
@@ -308,11 +315,12 @@ export class SaveOptions extends Screen {
     this.root.appendChild(ghostGrid(osd, slot, index));
     this.big = iconEl(sv, 'save-icon big'); this.root.appendChild(this.big);
     this.info = el('div', 'save-info'); const info = this.info;
-    info.appendChild(el('div', 'save-loc')).appendChild(label(`Memory Card (PS2)/${slot + 1}`));
-    this.nameEl = el('div', 'save-name', sv.title.join('\n')); info.appendChild(this.nameEl);
+    info.appendChild(el('div', 'save-loc')).appendChild(label(cardLabel(slot)));
+    this.nameEl = el('div', 'save-name'); this.nameEl.append(el('span', 'l1', sv.title[0]), el('span', 'l2', sv.title[1] || '')); info.appendChild(this.nameEl);
     info.appendChild(el('div', 'save-meta', fmtStamp(osd, sv.date)));
-    info.appendChild(el('div', 'save-size', `Size ${sv.sizeKB} KB`));
-    this.opts = ['Copy', 'Delete'].map((t, i) => { const o = el('div', 'save-opt', t); o.dataset.i = String(i); info.appendChild(o); return o; });
+    info.appendChild(el('div', 'save-size', `${sv.stack ? sv.stack + ',   ' : ''}Size ${sv.sizeKB} KB`));
+    this.desc = el('div', 'save-desc', (sv.desc || []).join(' ')); this.root.appendChild(this.desc);
+    this.opts = ['Open', 'Delete'].map((t, i) => { const o = el('div', 'save-opt', t); o.dataset.i = String(i); info.appendChild(o); return o; });
     this.arrow = el('div', 'copy-arrow', '↓'); this.target = el('div', 'copy-target'); this.targetFree = el('div', 'copy-free'); this.prompt = el('div', 'save-prompt'); this.sure = el('div', 'sure', 'Are you sure?'); this.yesno = el('div', 'yesno'); this.yes = el('span', 'save-opt yn', 'Yes'); this.no = el('span', 'save-opt yn', 'No'); this.yesno.append(this.yes, this.no);
     info.append(this.arrow, this.target, this.targetFree, this.sure, this.yesno); this.root.appendChild(info); this.root.appendChild(this.prompt);
     this.hintEl = el('div'); this.root.appendChild(this.hintEl);
@@ -322,39 +330,36 @@ export class SaveOptions extends Screen {
   draw() {
     const st = this.stage; const show = (e, on) => { e.hidden = !on; };
     this.opts.forEach((o, i) => { o.classList.toggle('selected', st === 'menu' && i === this.sel); o.classList.toggle('heading', st !== 'menu' && i === this.sel); show(o, st === 'menu' || (i === this.sel && st !== 'confirm-copy' && st !== 'copying' && st !== 'done-delete')); });
-    show(this.arrow, st === 'target'); show(this.target, st === 'target' || st === 'confirm-copy' || st === 'copying'); show(this.targetFree, st === 'target'); show(this.prompt, st === 'target' || st === 'copying' || st === 'deleting' || st === 'done-delete' || st === 'cannot');
+    show(this.arrow, st === 'target'); show(this.target, st === 'target' || st === 'confirm-copy' || st === 'copying'); show(this.targetFree, st === 'target'); show(this.prompt, st === 'target' || st === 'copying' || st === 'deleting' || st === 'done-delete' || st === 'cannot' || st === 'opened');
     show(this.sure, st === 'confirm-copy' || st === 'confirm-delete' || st === 'copying' || st === 'deleting'); show(this.yesno, st === 'confirm-copy' || st === 'confirm-delete' || st === 'copying' || st === 'deleting');
     this.yes.classList.toggle('selected', this.yn === 0); this.no.classList.toggle('selected', this.yn === 1); this.yesno.classList.toggle('dim', st === 'copying' || st === 'deleting'); this.sure.classList.toggle('dim', st === 'copying' || st === 'deleting');
     clear(this.target);
-    if (st === 'target') { this.target.append(svg(ARROW_L), label(`Memory Card (PS2)/${this.other + 1}`), svg(ARROW_R)); this.target.className = 'copy-target selected'; this.targetFree.textContent = `${this.osd.freeKB(this.other).toLocaleString('en-US')} KB Free`; this.prompt.textContent = 'Select media for copying to.'; }
-    else if (st === 'confirm-copy' || st === 'copying') { this.target.append('Copy → ', label(`Memory Card (PS2)/${this.other + 1}`)); this.target.className = 'copy-target heading'; }
-    if (st === 'copying') this.prompt.textContent = 'Copying... Do not remove memory card devices.';
     if (st === 'deleting') this.prompt.textContent = 'Deleting... Do not remove memory card device.';
-    if (st === 'done-delete') this.prompt.textContent = 'Delete completed.';
-    if (st === 'cannot') this.prompt.textContent = 'Cannot copy to the selected media.';
+    if (st === 'done-delete') this.prompt.textContent = 'Cannot delete. This one already happened.';
+    if (st === 'cannot') this.prompt.textContent = 'Nothing to open here.';
+    if (st === 'opened') this.prompt.textContent = 'Opened in a new tab.';
     show(this.big, st !== 'done-delete');
     clear(this.hintEl);
-    if (st === 'copying' || st === 'deleting') { /* no hints */ } else if (st === 'done-delete' || st === 'cannot') this.hintEl.appendChild(hints([['circle', 'Back']])); else this.hintEl.appendChild(hints([['cross', 'Enter'], ['circle', 'Back']]));
+    if (st === 'copying' || st === 'deleting' || st === 'opened' || st === 'cannot') { /* no hints */ } else if (st === 'done-delete') this.hintEl.appendChild(hints([['circle', 'Back']])); else this.hintEl.appendChild(hints([['cross', 'Enter'], ['circle', 'Back']]));
   }
   update(dt) { super.update(dt); if (this.busy > 0) { this.busy -= dt; if (this.busy <= 0) this.finishBusy(); } }
   finishBusy() {
-    if (this.stage === 'copying') { const dst = this.osd.app.console.cards[this.other]; if (!dst.some(s => s.id === this.sv.id)) dst.push(structuredClone(this.sv)); this.osd.saveSettings(); this.stage = 'menu'; this.sel = 0; this.draw(); }
-    else if (this.stage === 'deleting') { const c = this.osd.app.console.cards[this.slot]; c.splice(this.index, 1); this.osd.saveSettings(); this.stage = 'done-delete'; this.draw(); }
+    if (this.stage === 'deleting') { this.stage = 'done-delete'; this.draw(); }           // nothing is ever deleted
+    else if (this.stage === 'opened' || this.stage === 'cannot') { this.stage = 'menu'; this.draw(); }
   }
   press(b) {
     const st = this.stage; if (this.busy > 0) return;
     if (st === 'menu') {
       if (b === 'up' || b === 'down') { const n = step(this.opts, this.sel, b === 'down' ? 1 : -1); if (n !== this.sel) { this.sel = n; this.osd.sfx('tick'); this.draw(); } }
       else if (b === 'circle') { this.osd.sfx('cancel'); this.osd.pop(); }
-      else if (b === 'cross') { this.osd.sfx('confirm'); this.yn = 1; if (this.sel === 0) { this.stage = this.osd.freeKB(this.other) >= this.sv.sizeKB ? 'target' : 'cannot'; } else this.stage = 'confirm-delete'; this.draw(); }
+      else if (b === 'cross') { this.osd.sfx('confirm'); this.yn = 1; if (this.sel === 0) { if (this.sv.link) { this.osd.openLink(this.sv.link); this.stage = 'opened'; } else this.stage = 'cannot'; this.busy = 1.6; } else this.stage = 'confirm-delete'; this.draw(); }
     } else if (st === 'target') {
       if (b === 'cross') { this.osd.sfx('confirm'); this.stage = 'confirm-copy'; this.draw(); } else if (b === 'circle') { this.osd.sfx('cancel'); this.stage = 'menu'; this.draw(); } else if (b === 'left' || b === 'right') this.osd.sfx('tick');
     } else if (st === 'confirm-copy' || st === 'confirm-delete') {
       if (b === 'left' || b === 'right' || b === 'up' || b === 'down') { this.yn = 1 - this.yn; this.osd.sfx('tick'); this.draw(); }
       else if (b === 'circle') { this.osd.sfx('cancel'); this.stage = 'menu'; this.draw(); }
       else if (b === 'cross') { if (this.yn === 1) { this.osd.sfx('cancel'); this.stage = 'menu'; this.draw(); } else { this.osd.sfx(st === 'confirm-delete' ? 'delete' : 'confirm'); this.stage = st === 'confirm-copy' ? 'copying' : 'deleting'; this.busy = 2.5 + this.sv.sizeKB / 250; this.draw(); } }
-    } else if (st === 'done-delete') { if (b === 'circle') { this.osd.sfx('cancel'); this.osd.popTo('memoryCard', { slot: this.slot, loaded: true, sel: Math.max(0, Math.min(this.index, this.osd.app.console.cards[this.slot].length - 1)) }); } }
-    else if (st === 'cannot') { if (b === 'circle') { this.osd.sfx('cancel'); this.stage = 'menu'; this.draw(); } }
+    } else if (st === 'done-delete') { if (b === 'circle') { this.osd.sfx('cancel'); this.stage = 'menu'; this.sel = 0; this.draw(); } }
   }
 }
 // Triangle on a save: file information on the OSD's flat indigo background.
@@ -364,7 +369,7 @@ export class SaveInfo extends Screen {
     this.root.appendChild(ghostGrid(osd, slot, index));
     this.root.appendChild(iconEl(sv, 'save-icon medium'));
     const box = el('div', 'info-box'); box.appendChild(el('div', 'save-name', sv.title.join('\n')));
-    const rows = [['Location', label(`Memory Card (PS2)/${slot + 1}`)], ['File Type', label('Saved Data (PlayStation®2)')], ['File Size', `${sv.sizeKB} KB`], ['Last Updated', fmtStamp(osd, sv.date)], ['File Protection', 'None']];
+    const rows = [['Location', label(cardLabel(slot))], ['File Type', `${CARDS[slot].name} Data (PersonalStation®2)`], ['File Size', `${sv.sizeKB} KB`], ['Last Updated', fmtStamp(osd, sv.date)], ['File Protection', 'Permanent']];
     for (const [k, v] of rows) { const r = el('div', 'info-row'); const vv = el('span', 'v'); if (typeof v === 'string') vv.textContent = v; else vv.appendChild(v); r.append(el('span', 'k', k), vv); box.appendChild(r); }
     this.root.appendChild(box); this.root.appendChild(hints([['circle', 'Back']]));
   }

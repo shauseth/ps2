@@ -141,8 +141,11 @@ if (CAPTURE) {
   // The tube sits black until the visitor clicks, taps or presses a key anywhere; that gesture unlocks audio, so the boot
   // never runs silent. (click / touchend / keydown count as activations everywhere; pointerdown does not on iOS.)
   const EVENTS = ['click', 'touchend', 'keydown'];
+  // A small note outside the tube so nobody stares at a black screen: "loading..." while the sounds render, then the prompt.
+  const hint = document.getElementById('tv-hint'); hint.hidden = false;
+  app.sounds.prepareStartup().then(() => { if (!started) hint.textContent = 'click anywhere to continue.'; }).catch(() => { hint.textContent = 'click anywhere to continue.'; });
   let started = false;
-  const go = (e) => { if (started) return; started = true; if (e.type === 'touchend') e.preventDefault(); for (const ev of EVENTS) window.removeEventListener(ev, go); powerOn(); };
+  const go = (e) => { if (started) return; started = true; if (e.type === 'touchend') e.preventDefault(); for (const ev of EVENTS) window.removeEventListener(ev, go); hint.hidden = true; powerOn(); };
   for (const ev of EVENTS) window.addEventListener(ev, go);
   window.__ps2 = { app }; // for debugging from the console
 }
