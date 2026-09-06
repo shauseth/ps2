@@ -78,6 +78,7 @@ export class OSD {
     if (this.busy) return; this.busy = true; this.sfx('cancel');
     this.after(0.3, () => { screen.root.classList.add('vanish'); });
     this.after(0.55, () => { this.stack.pop().screen.unmount(); const b = this.stack[this.stack.length - 1]; b.screen = new SCREENS.browser(this, { sel: screen.slot, fadeIn: false }); b.screen.mount(); b.screen.root.classList.add('unflip'); this.app.picture.dataset.look = 'browser'; this.busy = false; });
+    this.after(0.95, () => { const b = this.stack[this.stack.length - 1]; b?.screen?.root.classList.remove('unflip'); }); // the un-flip rule targets the selected slot; drop it once played so moving the cursor does not replay it
   }
   // ---- disc ----
   toggleDisc() { this.app.console.disc = !this.app.console.disc; saveState(this.app.console); const t = this.top(); if (t && t.draw && t.root.classList.contains('browser')) t.draw(); return this.app.console.disc; }

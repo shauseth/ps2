@@ -14,7 +14,6 @@ html, body { margin: 0; height: 100%; background: #000; color: #fff; overflow: h
 #fade { position: absolute; inset: 0; background: #000; opacity: 1; pointer-events: none; }
 /* --- CRT television (year-2000 consumer tube) --- */
 #crt { display: none; }
-#picture.crt { border-radius: 4cqh / 4.5cqh; }
 /* the picture is rendered at 448 lines and upscaled: keep the upscale soft, then add a little phosphor bloom */
 #picture.crt #gl { filter: blur(0.09cqh) saturate(1.12) contrast(1.04); }
 #picture.crt[data-blur="1"] #gl { filter: blur(0.32cqh) saturate(1.12) contrast(1.04); }
