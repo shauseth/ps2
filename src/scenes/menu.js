@@ -4,7 +4,6 @@
 import * as THREE from 'three';
 import { EffectComposer } from 'three/addons/postprocessing/EffectComposer.js';
 import { RenderPass } from 'three/addons/postprocessing/RenderPass.js';
-import { ShaderPass } from 'three/addons/postprocessing/ShaderPass.js';
 import { OutputPass } from 'three/addons/postprocessing/OutputPass.js';
 import { glowTexture, noiseTexture } from '../textures.js';
 import { makeRng } from '../rng.js';
@@ -14,14 +13,6 @@ const RING_R = 20, ROD_LEN = 26, ROD_R = 2.6;         // ROM rod geometry (ring 
 const HUB_Y = 0.96;                                    // hub sits at 49 % H: camera slightly below the axis
 const CUBE_POS = [[-11.5, -12.0, 47.5], [-22.5, -7.2, 47.5], [-10.75, -2.4, 47.5], [-21.75, 2.4, 47.5], [-11.25, 7.2, 47.5], [-22.0, 12.0, 47.5]];
 
-const SOFT_BLUR = {
-  uniforms: { tDiffuse: { value: null }, radius: { value: 1.6 }, resolution: { value: new THREE.Vector2(1, 1) } },
-  vertexShader: `varying vec2 vUv; void main(){ vUv = uv; gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0); }`,
-  fragmentShader: `uniform sampler2D tDiffuse; uniform float radius; uniform vec2 resolution; varying vec2 vUv;
-    void main(){ vec2 px = radius / resolution; vec4 s = vec4(0.0); float w = 0.0;
-      for (int i = -2; i <= 2; i++) for (int j = -2; j <= 2; j++) { float k = exp(-0.35 * float(i*i + j*j)); s += texture2D(tDiffuse, vUv + vec2(float(i), float(j)) * px) * k; w += k; }
-      gl_FragColor = s / w; }`,
-};
 // Glass: screen-space refraction of the captured backdrop + flat facet shading + Blinn specular + Fresnel rim.
 const GLASS = {
   uniforms: { tScreen: { value: null }, centre: { value: new THREE.Vector2(0.5, 0.5) }, zoom: { value: -0.1 }, shift: { value: 0.05 }, refr: { value: 0.35 }, body: { value: new THREE.Vector3(0.15, 0.35, 0.45) }, bodyMix: { value: 0.7 }, rim: { value: new THREE.Vector3(0.6, 0.85, 1.0) }, rimGain: { value: 0.9 }, spec: { value: 0.6 }, lightDir: { value: new THREE.Vector3(-0.35, 0.75, 0.55).normalize() }, alpha: { value: 1.0 } },
@@ -78,10 +69,9 @@ export class MenuScene {
     this.overlay.add(bg);
     this.composer = new EffectComposer(r);
     this.composer.addPass(new RenderPass(this.overlay, this.camera));
-    this.blur = new ShaderPass(SOFT_BLUR); this.blur.uniforms.resolution.value.set(size.x, size.y); this.composer.addPass(this.blur);
     this.composer.addPass(new OutputPass());
   }
-  resize(w, h) { this.camera.aspect = w / h; this.camera.updateProjectionMatrix(); this.composer.setSize(w, h); this.rtBack.setSize(w, h); this.blur.uniforms.resolution.value.set(w, h); this.blur.uniforms.radius.value = Math.max(1, w / 640 * 1.6); this.trailCanvas.width = w; this.trailCanvas.height = h; }
+  resize(w, h) { this.camera.aspect = w / h; this.camera.updateProjectionMatrix(); this.composer.setSize(w, h); this.rtBack.setSize(w, h); this.trailCanvas.width = w; this.trailCanvas.height = h; }
 
   _build() {
     const s = this.scene;
@@ -115,10 +105,10 @@ export class MenuScene {
     this.romOverlay = new THREE.Group(); this.romOverlay.scale.set(1, -1, -1); this.tilt.add(this.romOverlay);
     this.clock = new THREE.Group(); this.romOverlay.add(this.clock);
     const rodGeo = hexRodGeometry(ROD_LEN, ROD_R);
-    this.rodBackMat = glassMaterial(THREE.BackSide, { refr: 0.2, bodyMix: 0.65, rimGain: 0.25, spec: 0.1 });
-    this.rodMat = glassMaterial(THREE.FrontSide, { refr: 0.25, bodyMix: 0.75, rimGain: 0.5, spec: 0.35, zoom: -0.1 });
-    this.hourMat = glassMaterial(THREE.FrontSide, { refr: 0.15, bodyMix: 0.85, body: [0.42, 0.78, 0.98], rim: [0.7, 0.95, 1.0], rimGain: 0.8, spec: 0.8, zoom: -0.1 });
-    this.hourBackMat = glassMaterial(THREE.BackSide, { refr: 0.15, bodyMix: 0.8, body: [0.3, 0.6, 0.85], rimGain: 0.3, spec: 0.3 });
+    this.rodBackMat = glassMaterial(THREE.BackSide, { refr: 0.55, bodyMix: 0.38, rimGain: 0.35, spec: 0.15 });
+    this.rodMat = glassMaterial(THREE.FrontSide, { refr: 0.65, bodyMix: 0.42, rimGain: 0.9, spec: 0.55, zoom: -0.12, shift: 0.07 });
+    this.hourMat = glassMaterial(THREE.FrontSide, { refr: 0.45, bodyMix: 0.6, body: [0.42, 0.78, 0.98], rim: [0.7, 0.95, 1.0], rimGain: 1.0, spec: 0.9, zoom: -0.12, shift: 0.07 });
+    this.hourBackMat = glassMaterial(THREE.BackSide, { refr: 0.4, bodyMix: 0.5, body: [0.3, 0.6, 0.85], rimGain: 0.4, spec: 0.3 });
     this.rods = [];
     for (let i = 0; i < 12; i++) {
       const pivot = new THREE.Group(); pivot.rotation.order = 'ZYX';
@@ -129,8 +119,8 @@ export class MenuScene {
     this.cubeCam = new THREE.Group(); this.overlay.add(this.cubeCam);
     const cg = new THREE.BoxGeometry(5.28, 5.28, 5.28);
     this.cubes = CUBE_POS.map((p, i) => {
-      const back = new THREE.Mesh(cg, glassMaterial(THREE.BackSide, { refr: 0.7, bodyMix: 0.3, body: [0.14, 0.13, 0.2], rimGain: 0.35, spec: 0.35 })); back.renderOrder = 20;
-      const front = new THREE.Mesh(cg, glassMaterial(THREE.FrontSide, { refr: 0.8, bodyMix: 0.35, body: [0.16, 0.15, 0.22], rimGain: 1.0, spec: 0.8, zoom: -0.1 })); front.renderOrder = 21;
+      const back = new THREE.Mesh(cg, glassMaterial(THREE.BackSide, { refr: 0.85, bodyMix: 0.2, body: [0.14, 0.13, 0.2], rimGain: 0.45, spec: 0.35, alpha: 0.92 })); back.renderOrder = 20;
+      const front = new THREE.Mesh(cg, glassMaterial(THREE.FrontSide, { refr: 0.95, bodyMix: 0.22, body: [0.16, 0.15, 0.22], rimGain: 1.3, spec: 0.9, zoom: -0.12, shift: 0.08, alpha: 0.9 })); front.renderOrder = 21;
       const g = new THREE.Group(); g.position.set(p[0], -p[1], -p[2]); g.add(back, front); g.visible = false; this.cubeCam.add(g);
       return { group: g, back: back.material, front: front.material, i, bright: 0, scale: 0 };
     });
@@ -239,7 +229,7 @@ export class MenuScene {
       ud.mesh.material = isHour ? this.hourMat : this.rodMat; ud.back.material = isHour ? this.hourBackMat : this.rodBackMat;
     }
     this.rodMat.uniforms.body.value.set(idle.r, idle.g, idle.b); this.rodBackMat.uniforms.body.value.set(idle.r * 0.6, idle.g * 0.6, idle.b * 0.7);
-    for (const m of [this.rodMat, this.rodBackMat, this.hourMat, this.hourBackMat]) m.uniforms.alpha.value = ringEase;
+    for (const m of [this.rodMat, this.rodBackMat, this.hourMat, this.hourBackMat]) m.uniforms.alpha.value = ringEase * 0.86;   // a little see-through, like glass
     // cubes: list state only; scale in 0.75 s from +0.35 s; selected one lit blue
     const showCubes = this.mode === 'list' && e > 0.5;
     for (const c of this.cubes) {
@@ -249,7 +239,7 @@ export class MenuScene {
       const sel = c.i === this.selectedItem ? 1 : 0; c.bright += (sel - c.bright) * 0.12;
       const body = new THREE.Color(0.16, 0.15, 0.22).lerp(new THREE.Color(0.05, 0.28, 0.9), c.bright);
       c.front.uniforms.body.value.set(body.r, body.g, body.b); c.back.uniforms.body.value.set(body.r * 0.8, body.g * 0.8, body.b * 0.9);
-      c.front.uniforms.bodyMix.value = 0.35 + 0.5 * c.bright; c.back.uniforms.bodyMix.value = 0.3 + 0.5 * c.bright;
+      c.front.uniforms.bodyMix.value = 0.22 + 0.45 * c.bright; c.back.uniforms.bodyMix.value = 0.2 + 0.4 * c.bright;
     }
     if (e > 0.5) this.configTimer++;
     if (this.exitTimer != null) this.exitTimer++;

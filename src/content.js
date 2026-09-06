@@ -1,14 +1,12 @@
 // PersonalStation 2: the memory cards are the site's content. Each save is one thing Shaurya did; the "Open" option on a
 // save follows its link. Bump CONTENT_VERSION when the cards change so a browser that cached the old set picks up the new.
-export const CONTENT_VERSION = 5;
+export const CONTENT_VERSION = 11;
 export const CARDS = [
   { tag: 'WORK', name: 'Work' },
   { tag: 'EDU', name: 'Education' },
   { tag: 'PROJECTS', name: 'Projects' },
   { tag: 'EXTRAS', name: 'Extras' },
 ];
-export const RESUME_URL = 'assets/Shaurya_Resume.pdf';
-export const PORTFOLIO_URL = 'assets/Shaurya_Portfolio.pdf';
 
 // id, two-line title, icon {shape, color, color2}, page background, date stamp, size, blurb lines, stack, link
 const mk = (id, title, icon, bg, date, sizeKB, desc, stack = '', link = null) => ({ id, title, icon, bg, date, sizeKB, desc, stack, link });
@@ -86,21 +84,15 @@ export function personalCards() {
       mk('SLES-SKILLS', ['Skills', 'Inventory'], { shape: 'toolbox', color: '#c83a2a', color2: '#3a3a3a' }, '#141a28', '2026/01/01 00:00:00', 32,
         ['Python, R, Swift, SQL.', 'PyTorch, scikit-learn, XGBoost, NumPy, Polars, RDKit.', 'Transformers, LLMs, MLPs, CNNs, SARSA, Q-learning.'],
         'Fully stocked'),
-      mk('SLES-RESUME', ['Résumé', 'PDF'], { shape: 'paper', color: '#ececec', color2: '#444' }, '#1a1a20', '2026/09/06 12:00:00', 96,
-        ['The one-page version. Open it, print it, staple it to something.'],
-        'PDF', RESUME_URL),
-      mk('SLES-PORTFOLIO', ['Portfolio', 'PDF'], { shape: 'stack', color: '#e8e8e8', color2: '#3a3a40' }, '#1a1a20', '2026/09/06 12:00:00', 1940,
-        ['The version with pictures. Slides for everything on the other cards.'],
-        'PDF', PORTFOLIO_URL),
-      mk('SLES-GITHUB', ['GitHub', '@shauseth'], { shape: 'blocks', color: '#e6edf3', color2: '#3a4048' }, '#101418', '2026/09/06 12:00:00', 48,
+      mk('SLES-GITHUB', ['GitHub', '@shauseth'], { shape: 'github', color: '#f0f3f6', color2: '#7a8290' }, '#101418', '2026/09/06 12:00:00', 48,
         ['Code lives here.'],
         'Link', 'https://github.com/shauseth'),
-      mk('SLES-LINKEDIN', ['LinkedIn', '@shauseth'], { shape: 'badge', color: '#0a66c2', color2: '#eaf2ff' }, '#08243e', '2026/09/06 12:00:00', 48,
+      mk('SLES-TWITTER', ['Twitter', '@shauseth'], { shape: 'bird', color: '#1d9bf0', color2: '#0f6fb0' }, '#07202e', '2026/09/06 12:00:00', 48,
+        ['Posts, occasionally.'],
+        'Link', 'https://twitter.com/shauseth'),
+      mk('SLES-LINKEDIN', ['LinkedIn', '@shauseth'], { shape: 'linkedin', color: '#0a66c2', color2: '#073f7a' }, '#08243e', '2026/09/06 12:00:00', 48,
         ['The professional one.'],
         'Link', 'https://www.linkedin.com/in/shauseth'),
-      mk('SLES-EMAIL', ['Say hi', 'sseth@ualberta.ca'], { shape: 'envelope', color: '#eaf6ee', color2: '#2aa06a' }, '#062a1c', '2026/09/06 12:00:00', 16,
-        ['Email is the fastest way. Open this and it drafts one for you.'],
-        'Link', 'mailto:sseth@ualberta.ca'),
     ],
   ];
 }

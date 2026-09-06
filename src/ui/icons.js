@@ -1,12 +1,13 @@
 // Inline SVG glyphs for the PS2 controller buttons and OSD pictograms. Sized via CSS (height in cqh).
 const NS = 'http://www.w3.org/2000/svg';
 export const BUTTON = {
-  cross: `<svg viewBox="0 0 24 24" class="btn cross"><path d="M5 5 L19 19 M19 5 L5 19" fill="none" stroke="#7e8fe6" stroke-width="3.2" stroke-linecap="round"/></svg>`,
-  circle: `<svg viewBox="0 0 24 24" class="btn circle"><circle cx="12" cy="12" r="7.5" fill="none" stroke="#e8433c" stroke-width="3.2"/></svg>`,
-  triangle: `<svg viewBox="0 0 24 24" class="btn triangle"><path d="M12 4.5 L20.5 19 L3.5 19 Z" fill="none" stroke="#35b862" stroke-width="3" stroke-linejoin="round"/></svg>`,
-  square: `<svg viewBox="0 0 24 24" class="btn square"><rect x="5" y="5" width="14" height="14" fill="none" stroke="#ee7fc0" stroke-width="3.2" stroke-linejoin="round"/></svg>`,
+  cross: `<svg viewBox="0 0 24 24" class="btn cross"><circle cx="12" cy="12" r="11.2" fill="#0a0a0c"/><circle cx="12" cy="12" r="11.2" fill="none" stroke="#3a3b40" stroke-width="0.8"/><path d="M7.5 7.5 L16.5 16.5 M16.5 7.5 L7.5 16.5" fill="none" stroke="#8d9cf0" stroke-width="2.4" stroke-linecap="round"/></svg>`,
+  circle: `<svg viewBox="0 0 24 24" class="btn circle"><circle cx="12" cy="12" r="11.2" fill="#0a0a0c"/><circle cx="12" cy="12" r="11.2" fill="none" stroke="#3a3b40" stroke-width="0.8"/><circle cx="12" cy="12" r="5" fill="none" stroke="#f04a42" stroke-width="2.4"/></svg>`,
+  triangle: `<svg viewBox="0 0 24 24" class="btn triangle"><circle cx="12" cy="12" r="11.2" fill="#0a0a0c"/><circle cx="12" cy="12" r="11.2" fill="none" stroke="#3a3b40" stroke-width="0.8"/><path d="M12 6.4 L17.6 16.4 L6.4 16.4 Z" fill="none" stroke="#3fcc6e" stroke-width="2.2" stroke-linejoin="round"/></svg>`,
+  square: `<svg viewBox="0 0 24 24" class="btn square"><circle cx="12" cy="12" r="11.2" fill="#0a0a0c"/><circle cx="12" cy="12" r="11.2" fill="none" stroke="#3a3b40" stroke-width="0.8"/><rect x="7.2" y="7.2" width="9.6" height="9.6" fill="none" stroke="#f08ccc" stroke-width="2.4" stroke-linejoin="round"/></svg>`,
 };
 // Small "sun-like" clock pictogram shown before the time in System Configuration.
+export const CLOCK_ICON = `<svg viewBox="0 0 24 24" class="pict clock"><circle cx="12" cy="12" r="5.2" fill="none" stroke="#d8d8d8" stroke-width="1.6"/><path d="M12 8.5 V12 L14.5 13.5" fill="none" stroke="#d8d8d8" stroke-width="1.6" stroke-linecap="round"/><g stroke="#d8d8d8" stroke-width="1.6" stroke-linecap="round"><path d="M12 2.5 V4.5 M12 19.5 V21.5 M2.5 12 H4.5 M19.5 12 H21.5 M5.3 5.3 L6.7 6.7 M17.3 17.3 L18.7 18.7 M5.3 18.7 L6.7 17.3 M17.3 6.7 L18.7 5.3"/></g></svg>`;
 // Up/down stacked arrows shown beside an editable item, and left/right arrows around a value.
 export const ARROWS_UD = `<svg viewBox="0 0 16 24" class="pict arrows-ud"><path d="M8 3 L13 9 H3 Z" fill="#8c8c8c"/><path d="M8 21 L3 15 H13 Z" fill="#8c8c8c"/></svg>`;
 export const ARROW_L = `<svg viewBox="0 0 12 20" class="pict arrow-l"><path d="M10 2 L2 10 L10 18 Z" fill="#9a9a9a"/></svg>`;

@@ -1,10 +1,10 @@
 // The OSD screen stack. Layout numbers are percentages of the 4:3 picture measured from reference captures
 // (research/frames-menu-screens.md, typography.md); every screen owns a DOM subtree inside #ui.
 import { el, clear } from './overlay.js';
-import { BUTTON, ARROWS_UD, ARROW_L, ARROW_R, ARROW_DOWN, ARROW_UP, PS2_GHOST, svg } from './icons.js';
+import { BUTTON, CLOCK_ICON, ARROWS_UD, ARROW_L, ARROW_R, ARROW_DOWN, ARROW_UP, PS2_GHOST, svg } from './icons.js';
 import { tr, LANG_NAMES } from './strings.js';
 import { icon3d } from './icon3d.js';
-import { CARDS, RESUME_URL } from '../content.js';
+import { CARDS } from '../content.js';
 const cardLabel = (slot) => `Memory Card (${CARDS[slot].tag})/${slot + 1}`;
 
 const pad2 = (n) => String(n).padStart(2, '0');
@@ -115,7 +115,7 @@ export class SystemConfig extends Screen {
       { kind: 'lang', values: LANG_NAMES, get: () => s.language, set: (v) => { s.language = v; }, row: false },
     ];
     this.sel = sel; this.editing = false; this.display = true; this.fade = 0;
-    this.top = el('div', 'config-top'); this.date = el('span', 'date'); this.time = el('span', 'time'); this.timeText = el('span', 'time-text'); this.ampm = el('span', 'ampm'); this.time.append(this.timeText, this.ampm); this.top.append(this.date, this.time); this.root.appendChild(this.top);
+    this.top = el('div', 'config-top'); this.date = el('span', 'date'); this.time = el('span', 'time'); this.time.appendChild(svg(CLOCK_ICON)); this.timeText = el('span', 'time-text'); this.ampm = el('span', 'ampm'); this.time.append(this.timeText, this.ampm); this.top.append(this.date, this.time); this.root.appendChild(this.top);
     this.body = el('div', 'config-body'); this.title = el('div', 'title'); this.item = el('div', 'config-item'); this.itemText = el('span', 'config-item-text'); this.arrows = svg(ARROWS_UD); this.item.append(this.itemText, this.arrows); this.value = el('div', 'config-value');
     this.body.append(this.title, this.item, this.value); this.root.appendChild(this.body);
     this.hintRow = el('div'); this.root.appendChild(this.hintRow);
@@ -137,7 +137,6 @@ export class SystemConfig extends Screen {
     if (!this.editing && (this.sel === 0 || this.sel === 1)) list.push(['triangle', L.options]);
     this.hintRow.appendChild(hints(this.display ? list : [['square', L.display]]));
     this.body.hidden = !this.display; this.item.classList.toggle('editing', this.editing);
-    this.osd.setBlur(this.display);
   }
   updateClock() { const d = this.osd.now(); const t = fmtTime(d, this.s.timeFormat); this.date.textContent = fmtDate(d, this.s.dateFormat); this.timeText.textContent = t.text; this.ampm.textContent = t.ampm; if (this.clockVal) this.clockVal.textContent = `${fmtDate(d, this.s.dateFormat)}\u00a0\u00a0${t.text}${t.ampm ? '\u00a0' + t.ampm : ''}`; }
   update(dt) { super.update(dt); this.updateClock(); if (this.fade > 0) { this.fade -= dt; this.body.style.opacity = String(1 - Math.max(0, this.fade) / 0.33); } }
@@ -164,7 +163,7 @@ export class SystemConfig extends Screen {
 export class ClockAdjust extends Screen {
   constructor(osd) {
     super(osd); this.root.className = 'screen config'; const s = osd.app.console.settings; this.s = s;
-    this.top = el('div', 'config-top'); this.date = el('span', 'date'); this.time = el('span', 'time'); this.timeText = el('span', 'time-text'); this.ampm = el('span', 'ampm'); this.time.append(this.timeText, this.ampm); this.top.append(this.date, this.time); this.root.appendChild(this.top);
+    this.top = el('div', 'config-top'); this.date = el('span', 'date'); this.time = el('span', 'time'); this.time.appendChild(svg(CLOCK_ICON)); this.timeText = el('span', 'time-text'); this.ampm = el('span', 'ampm'); this.time.append(this.timeText, this.ampm); this.top.append(this.date, this.time); this.root.appendChild(this.top);
     this.body = el('div', 'config-body'); this.body.appendChild(el('div', 'title', tr(s.language).title));
     const item = el('div', 'config-item editing'); item.appendChild(el('span', 'config-item-text', tr(s.language).items[0])); this.body.appendChild(item);
     this.value = el('div', 'config-value fields'); this.body.appendChild(this.value); this.root.appendChild(this.body);
@@ -200,7 +199,7 @@ export class ClockOptions extends OptionList {
       { label: 'Daylight Savings Time\n(Summer Time)', values: ['Standard (Winter Time)', 'Daylight Savings (Summer Time)'], idx: s.daylight === 'Daylight' ? 1 : 0, onChange: (v) => { s.daylight = v.startsWith('Daylight') ? 'Daylight' : 'Standard'; osd.saveSettings(); } },
     ], { cls: 'screen config config-options', hintList: [['cross', L.enter], ['circle', L.back]] });
     this.s = s;
-    this.top = el('div', 'config-top'); this.date = el('span', 'date'); this.time = el('span', 'time'); this.timeText = el('span', 'time-text'); this.ampm = el('span', 'ampm'); this.time.append(this.timeText, this.ampm); this.top.append(this.date, this.time); this.root.appendChild(this.top);
+    this.top = el('div', 'config-top'); this.date = el('span', 'date'); this.time = el('span', 'time'); this.time.appendChild(svg(CLOCK_ICON)); this.timeText = el('span', 'time-text'); this.ampm = el('span', 'ampm'); this.time.append(this.timeText, this.ampm); this.top.append(this.date, this.time); this.root.appendChild(this.top);
   }
   draw() {
     // one item at a time, like the main list: name (cyan) + value (white) under the title
@@ -231,7 +230,7 @@ export class Browser extends Screen {
     this.root.appendChild(svg(PS2_GHOST));
     this.label = el('div', 'browser-label'); this.root.appendChild(this.label);
     this.n = CARDS.length; // the disc is index n
-    this.slots = CARDS.map((c, i) => { const s = el('div', 'mc-slot clickable'); s.dataset.slot = String(i); s.addEventListener('click', () => { if (this.sel !== i) { this.sel = i; this.osd.sfx('tick'); this.draw(); } else this.osd.app.input.press('cross', 'pointer'); }); s.appendChild(el('div', 'mc-glow')); this.root.appendChild(s); return s; });
+    this.slots = CARDS.map((c, i) => { const s = el('div', 'mc-slot clickable'); s.dataset.slot = String(i); s.addEventListener('click', () => { if (this.sel !== i) { this.sel = i; this.osd.sfx('tick'); this.draw(); } else this.osd.app.input.press('cross', 'pointer'); }); s.appendChild(el('div', 'mc-glow')); for (const f of ['mc-top', 'mc-bottom', 'mc-left', 'mc-right']) s.appendChild(el('div', 'mc-face ' + f)); this.root.appendChild(s); return s; });
     this.disc = el('div', 'disc-icon clickable'); this.disc.appendChild(el('div', 'mc-glow')); this.disc.addEventListener('click', () => { if (this.sel !== this.n) { this.sel = this.n; this.osd.sfx('tick'); this.draw(); } else this.osd.app.input.press('cross', 'pointer'); }); this.root.appendChild(this.disc);
     this.hintEl = hints([['cross', 'Enter'], ['circle', 'Back']]); this.root.appendChild(this.hintEl);
     this.sel = sel; this.flip = 0; if (fadeIn) { this.root.classList.add('fade-in'); }
@@ -242,7 +241,7 @@ export class Browser extends Screen {
     const n = this.n; if (this.sel > n || (this.sel === n && !this.hasDisc)) this.sel = 0;
     this.slots.forEach((s, i) => s.classList.toggle('selected', i === this.sel)); this.disc.hidden = !this.hasDisc; this.disc.classList.toggle('selected', this.sel === n);
     this.root.classList.toggle('with-disc', this.hasDisc);
-    clear(this.label); this.label.appendChild(this.sel === n ? label('Résumé (PDF) DISC') : label(cardLabel(this.sel)));
+    clear(this.label); this.label.appendChild(this.sel === n ? label('PersonalStation®2 DISC') : label(cardLabel(this.sel)));
   }
   update(dt) { super.update(dt); const g = 0.85 + 0.15 * Math.sin(this.t * 2 * Math.PI / 3); this.root.style.setProperty('--breathe', g.toFixed(3)); if (this.flip > 0) { this.flip -= dt; } }
   press(b) {
@@ -251,13 +250,13 @@ export class Browser extends Screen {
     if (b === 'left' || b === 'right') { if (this.sel === n) return; const s = this.sel + (b === 'right' ? 1 : -1); if (s >= 0 && s < n) { this.sel = s; this.osd.sfx('tick'); this.draw(); } }
     else if (b === 'up' || b === 'down') { if (!this.hasDisc) return; const s = b === 'down' ? n : (this.sel === n ? this.lastCard || 0 : this.sel); if (s !== this.sel) { if (this.sel < n) this.lastCard = this.sel; this.sel = s; this.osd.sfx('tick'); this.draw(); } }
     else if (b === 'cross') {
-      if (this.sel === n) { this.osd.sfx('confirm'); this.osd.openLink(RESUME_URL); this.osd.bootDisc(); }
+      if (this.sel === n) { this.osd.sfx('confirm'); this.osd.bootDisc(); }
       else { this.osd.sfx('memcard'); this.flip = 0.4; this.slots[this.sel].classList.add('flip'); this.root.classList.add('flipping'); const slot = this.sel; this.osd.after(0.35, () => this.osd.push('memoryCard', { slot })); }
     }
     else if (b === 'circle') { this.osd.leaveBrowser(); }
   }
 }
-// Memory card contents: icons pop in one by one while "loading..." shows.
+// Memory card contents: icons pop in one by one while "Loading..." shows.
 export class MemoryCard extends Screen {
   constructor(osd, { slot = 0, sel = 0, scroll = 0, loaded = false } = {}) {
     super(osd); this.root.className = 'screen memcard'; this.slot = slot; this.saves = osd.app.console.cards[slot];
@@ -265,7 +264,7 @@ export class MemoryCard extends Screen {
     this.root.appendChild(el('div', 'mc-icon-slot'));
     this.saveTitle = el('div', 'save-title'); this.root.appendChild(this.saveTitle);
     this.grid = el('div', 'save-grid'); this.root.appendChild(this.grid);
-    this.loading = el('div', 'loading', 'loading...'); this.root.appendChild(this.loading);
+    this.loading = el('div', 'loading', 'Loading...'); this.root.appendChild(this.loading);
     this.up = svg(ARROW_UP); this.down = svg(ARROW_DOWN); this.root.append(this.up, this.down);
     this.sel = sel; this.cols = 5; this.rowsVisible = 3; this.scroll = scroll;
     this.hintsFull = hints([['cross', 'Enter'], ['circle', 'Back'], ['triangle', 'Options']]); this.hintsLoad = hints([['circle', 'Back']]); this.root.append(this.hintsFull, this.hintsLoad);
@@ -320,7 +319,7 @@ export class SaveOptions extends Screen {
     info.appendChild(el('div', 'save-meta', fmtStamp(osd, sv.date)));
     info.appendChild(el('div', 'save-size', `${sv.stack ? sv.stack + ',   ' : ''}Size ${sv.sizeKB} KB`));
     this.desc = el('div', 'save-desc', (sv.desc || []).join(' ')); this.root.appendChild(this.desc);
-    this.opts = ['Open', 'Delete'].map((t, i) => { const o = el('div', 'save-opt', t); o.dataset.i = String(i); info.appendChild(o); return o; });
+    this.opts = (sv.link ? ['Open', 'Delete'] : ['Delete']).map((t, i) => { const o = el('div', 'save-opt', t); o.dataset.i = String(i); o.dataset.act = t; info.appendChild(o); return o; }); // no link, no Open
     this.arrow = el('div', 'copy-arrow', '↓'); this.target = el('div', 'copy-target'); this.targetFree = el('div', 'copy-free'); this.prompt = el('div', 'save-prompt'); this.sure = el('div', 'sure', 'Are you sure?'); this.yesno = el('div', 'yesno'); this.yes = el('span', 'save-opt yn', 'Yes'); this.no = el('span', 'save-opt yn', 'No'); this.yesno.append(this.yes, this.no);
     info.append(this.arrow, this.target, this.targetFree, this.sure, this.yesno); this.root.appendChild(info); this.root.appendChild(this.prompt);
     this.hintEl = el('div'); this.root.appendChild(this.hintEl);
@@ -352,7 +351,7 @@ export class SaveOptions extends Screen {
     if (st === 'menu') {
       if (b === 'up' || b === 'down') { const n = step(this.opts, this.sel, b === 'down' ? 1 : -1); if (n !== this.sel) { this.sel = n; this.osd.sfx('tick'); this.draw(); } }
       else if (b === 'circle') { this.osd.sfx('cancel'); this.osd.pop(); }
-      else if (b === 'cross') { this.osd.sfx('confirm'); this.yn = 1; if (this.sel === 0) { if (this.sv.link) { this.osd.openLink(this.sv.link); this.stage = 'opened'; } else this.stage = 'cannot'; this.busy = 1.6; } else this.stage = 'confirm-delete'; this.draw(); }
+      else if (b === 'cross') { this.osd.sfx('confirm'); this.yn = 1; if (this.opts[this.sel].dataset.act === 'Open') { this.osd.openLink(this.sv.link); this.stage = 'opened'; this.busy = 1.6; } else this.stage = 'confirm-delete'; this.draw(); }
     } else if (st === 'target') {
       if (b === 'cross') { this.osd.sfx('confirm'); this.stage = 'confirm-copy'; this.draw(); } else if (b === 'circle') { this.osd.sfx('cancel'); this.stage = 'menu'; this.draw(); } else if (b === 'left' || b === 'right') this.osd.sfx('tick');
     } else if (st === 'confirm-copy' || st === 'confirm-delete') {

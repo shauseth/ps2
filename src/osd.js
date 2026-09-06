@@ -19,7 +19,6 @@ export class OSD {
   saveSettings() { saveState(this.app.console); }
   freeKB(slot) { return Math.max(0, 8192 - 128 - this.app.console.cards[slot].reduce((a, s) => a + s.sizeKB, 0)); }
   sfx(name) { this.app.sounds?.play(name); }
-  setBlur(on) { this.app.picture.dataset.blur = on ? '1' : '0'; }
   setMode(mode) { this.app.scenes.menu.setMode(mode); }
   // ---- timeline helper: run functions at delays (seconds) ----
   after(delay, fn) { this.timeline.push({ t: delay, fn }); }
@@ -50,7 +49,6 @@ export class OSD {
     scene.setLook(look, look === prevLook ? 0 : (look === 'config' || prevLook === 'config') ? 1.0 : 0.5);
     scene.setMode(name === 'clockOptions' || name === 'clockAdjust' ? 'options' : 'list');
     this.app.picture.dataset.look = look;
-    this.setBlur(look === 'config');
     // System Configuration: the backdrop fades in first and the text pops ~1.4 s after X; leaving it, the fog and rods
     // fade for 1.2 s and the main-menu text pops just after black (cursor remembered)
     if (look === 'config' && prevLook !== 'config') this.pending = 1.4; else if (prevLook === 'config' && look !== 'config') this.pending = 1.3; else this.pending = 0;
