@@ -1,0 +1,32 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>PlayStation 2</title>
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="color-scheme" content="dark">
+<link rel="icon" href="data:,">
+<link rel="stylesheet" href="styles.css">
+<script type="importmap">
+{ "imports": { "three": "./vendor/three/three.module.min.js", "three/addons/": "./vendor/three/addons/" } }
+</script>
+</head>
+<body>
+  <div id="tv">
+    <div id="picture">
+      <canvas id="gl"></canvas>
+      <div id="ui"></div>
+      <div id="fade"></div>
+    </div>
+  </div>
+  <div id="power" hidden>
+    <button id="power-btn" type="button" aria-label="Power on">
+      <span class="ring"></span>
+      <span class="label">POWER</span>
+    </button>
+    <p class="hint">Click, tap or press any key to power on</p>
+    <p class="keys">Arrows move · Enter = ✕ · Esc = ○ · Tab = △ · Q = □ · I inserts a disc</p>
+  </div>
+  <script type="module" src="src/main.js"></script>
+</body>
+</html>

@@ -1,0 +1,1 @@
+{ "name": "ps2-osd", "private": true, "type": "module", "scripts": { "start": "node serve.mjs" } }
