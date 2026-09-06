@@ -213,7 +213,7 @@ export class BootScene {
     for (const f of this.fogLayers) f.anim = 0;
     for (let i = 0; i < 2; i++) { this.app.renderer.setRenderTarget(this.rtFeed[i]); this.app.renderer.clear(); } this.app.renderer.setRenderTarget(null);
     clear(this.app.ui);
-    this.sceText = el('div', 'sce-text', 'Sony Computer Entertainment'); this.sceText.style.opacity = '0'; this.app.ui.appendChild(this.sceText);
+    this.sceText = el('div', 'sce-text', '@shauseth computer entertainment'); this.sceText.style.opacity = '0'; this.app.ui.appendChild(this.sceText);
     this.lead = 2.0; this.app.fade(1, 0);
     this.app.sounds?.play('startup', this.lead, this.disc ? { disc: true, whooshPeakAt: null } : {});
     this.stepFrame(); this.render();
