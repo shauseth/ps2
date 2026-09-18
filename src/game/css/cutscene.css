@@ -1,0 +1,3 @@
+/* cutscene: owned by the cutscene module. The picture is the WebGL world under the HUD's letterbox, subtitles and
+   captions (hud.css); this phase only needs a transparent root and a black ground for the title card and the disc blacks. */
+.game .phase.cutscene { background: transparent; }

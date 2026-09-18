@@ -1,0 +1,10 @@
+/* play: owned by the play module. The WebGL picture shows through; the module only adds the black card under the
+   "Big Smoke" title and the pause overlay (a simple centred card: the PS2 pause screen is the map, not recreated). */
+.game .phase.play { background: transparent; }
+.game .phase.play .blackout { position: absolute; inset: 0; background: #000; }
+.game .phase.play .pause { position: absolute; inset: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 5cqh; background: rgba(0, 0, 0, 0.55); font-family: var(--gta-sans); font-weight: 700; color: #E1E1E1; }
+.game .phase.play .pause-title { font-size: 9.5cqh; line-height: 1; letter-spacing: 0.01em; transform: scaleX(1.12); paint-order: stroke fill; -webkit-text-stroke: 0.12em #000; }
+.game .phase.play .pause-hints { display: flex; gap: 7cqw; font-size: 3.6cqh; line-height: 1; paint-order: stroke fill; -webkit-text-stroke: 0.1em #000; }
+.game .phase.play .pkey { display: inline-flex; align-items: center; gap: 1.4cqw; }
+.game .phase.play .pkey .btn { height: 4.4cqh; width: 4.4cqh; flex: none; }
+.game .phase.play .pkey .btn.pill { width: 8.8cqh; }

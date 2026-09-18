@@ -112,6 +112,7 @@ html, body { margin: 0; height: 100%; background: #000; color: #fff; overflow: h
 .config-options .vtable { top: 53.5cqh; }
 /* --- browser --- */
 #picture[data-look="browser"] #gl, #picture[data-look="save"] #gl, #picture[data-look="logo"] #gl { visibility: hidden; }
+#picture[data-look="game"] #gl { visibility: visible; }
 .browser, .memcard { background: linear-gradient(118deg, #8b8b89 0%, #737371 22%, #575752 48%, #3b3a31 74%, #1c1b12 100%); }
 .browser .ps2ghost { position: absolute; left: 3.8cqw; top: 6.8cqh; height: 5.6cqh; width: 12cqw; }
 .browser-label { position: absolute; right: 3.5cqw; top: 11.5cqh; transform: translateY(-0.93em); color: var(--c-yellow); font-size: calc(3.7cqh / var(--cap)); }

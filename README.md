@@ -41,6 +41,24 @@ The Browser and memory-card screens also respond to clicks and taps.
   variants), the configuration scroll, sub-menu sounds, delete, the entry wash and a statistical model of the
   ambience, all with a hall reverb.
 
+## The disc
+
+Select the disc in the Browser and press ✕: the drive spins up, the PlayStation 2 logo plays, and the title takes the
+console. It is Grand Theft Auto: San Andreas as a PS2 played it, rebuilt from real-hardware captures the same way as
+the menu (research/gta-sa-launch.md): the Rockstar Games and Rockstar North badges drawn on with their marker sounds,
+the two text cards, the white flash and the glowing logo on beat one of the theme, the fifteen credit cards with their
+tilted photo strips, the legal screen, the six loading artworks with the bar and the loading tune, then the opening:
+"Francis INTL. Airport, Liberty City, 1992.", the airports, the taxi, the C.R.A.S.H. pull-over, the police-car ride
+with the script's own subtitle table, and the alley, where CJ says the line. After that you have control: walk, take
+the BMX (△), pedal (✕), follow the CJ icon to Grove Street and walk into the red marker. START pauses; SELECT (I)
+takes the disc out and drops the console back to the Browser. ✕ or START skips the movie and the cutscenes.
+
+Everything on the disc is drawn or synthesised at runtime: the badges, the Pricedown-style letterforms and the SA logo
+are SVG paths; the theme is re-synthesised from a transcription and spectral measurements; the dialogue is subtitles
+only; the world is a low-poly three.js Los Santos in the script's own coordinates. Fonts shipped
+for it: Pirata One and Michroma (OFL). `?capture=1&state=game&phase=movie|loading|cutscene|play&t=SECONDS` opens any
+point of it deterministically.
+
 ## URL parameters (for testing)
 
 `?card=0` no memory card · `?disc=1` disc boot · `?seed=N` reproducible randomness · `?capture=1` deterministic

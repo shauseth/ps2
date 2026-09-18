@@ -88,7 +88,8 @@ export class OSD {
     this.after(0.5, () => { this.top()?.unmount(); this.stack.push({ name: 'logo', args: {}, screen: null }); });
     this.after(5.0, () => { const s = new SCREENS.logo(this); this.stack[this.stack.length - 1].screen = s; s.mount(); this.app.picture.dataset.look = 'logo'; this.app.fade(0, 0); this.app.sounds?.play('logoHum'); });
   }
-  afterLogo() { this.app.fade(1, 0); this.stack.pop()?.screen?.unmount(); const b = this.stack[this.stack.length - 1]; if (b && b.name === 'browser') { b.screen = new SCREENS.browser(this, { sel: this.app.console.cards.length, fadeIn: true }); b.screen.mount(); this.app.picture.dataset.look = 'browser'; } else this.reset('main'); this.app.fade(0, 0.3); this.busy = false; }
+  // After the logo's hard cut the title takes the console: the game state runs the disc from here.
+  afterLogo() { this.app.fade(1, 0); this.stack.pop()?.screen?.unmount(); this.busy = false; if (this.app.launchDisc) this.app.launchDisc(); else { this.reset('main'); this.app.fade(0, 0.3); } }
   press(b) { if (this.busy) return; this.top()?.press(b); }
   wordmarkSVG() {
     // Recreated "PlayStation(R)2" logotype as flowing text (proportions from the reference frames; not a Sony asset)

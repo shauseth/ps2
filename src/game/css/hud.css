@@ -1,0 +1,50 @@
+/* hud: owned by the hud module. Geometry in % of the 640x448 picture (research/gta-sa-launch.md §6; frames ref-hVj4/t0205.50,
+   ref-hVj/t0002, t0014 with rows 25-465 of the 880x495 capture ↔ the 448 lines): x/6.4 → cqw, y/4.48 → cqh. */
+.hud { position: absolute; inset: 0; pointer-events: none; font-family: var(--gta-sans); font-weight: 700; line-height: 1; letter-spacing: 0; color: #fff; --edge: 0.45cqh; }
+.hud > * { position: absolute; }
+.hud [hidden] { display: none !important; }
+/* letterbox: SA leaves the picture at y 10.2-82.4 % (top bar 46 px, bottom bar 79 px of 448 - thinner on top, measured) */
+.hud .lb-top { left: 0; right: 0; top: 0; height: 10.2cqh; background: #000; }
+.hud .lb-bottom { left: 0; right: 0; top: 82.4cqh; bottom: 0; background: #000; }
+/* subtitles / objectives: bold sans, cap 13 px (2.95 % H, font 4.05 cqh), #E1E1E1 with a 2 px black edge, centred, the first
+   line's centre at 85.3 % under the letterbox (86.3 % in play), wrapping inside 94 % of the width */
+.hud .sub { left: 6.5cqw; right: 6.5cqw; top: 82.9cqh; text-align: center; font-size: 4.05cqh; line-height: 4.8cqh; color: #E1E1E1; paint-order: stroke fill; -webkit-text-stroke: 0.2em #000; white-space: pre-wrap; transform: scaleX(1.08); transform-origin: 50% 0; }
+.hud .sub.play { top: 83.9cqh; }
+/* captions: white centred lines, --y = the engine's text top (% of H); the cap top lands ≈ 5 px lower. 'large' = the title card
+   (cap 10.2 px, "Francis INTL. Airport," 42.5 % wide), 'small' = the airport caption (cap 9 px, 49.6 % wide); shadow = the 1 px drop */
+.hud .caption { inset: 0; }
+.hud .caption .cline { position: absolute; left: 50cqw; top: calc(var(--y) * 1cqh + 0.55cqh); white-space: nowrap; transform: translateX(-50%) scaleX(var(--sx, 1)); transform-origin: 50% 0; color: #fff; }
+.hud .caption.large .cline { font-size: 3.13cqh; --sx: 1.8; }
+.hud .caption.small .cline { font-size: 2.78cqh; --sx: 1.52; }
+.hud .caption.shadow .cline { text-shadow: 0.16cqw 0.22cqh 0 #000; }
+/* help box: near-opaque black, fixed width x 30-238, top 23 (two lines end at 69); text at x 38.5, cap 9 px, 18.3 px line pitch,
+   the face 1.32x wider than Helvetica (button glyphs counter-scaled) */
+.hud .help { left: 4.7cqw; top: 5.1cqh; width: 32.5cqw; box-sizing: border-box; padding: 1.3cqh 1.3cqw 0.75cqh 1.33cqw; background: rgba(0, 0, 0, 0.8); font-size: 2.75cqh; line-height: 4.08cqh; color: #f0f0f0; text-shadow: 0.16cqw 0.22cqh 0 #000; white-space: pre-wrap; }
+.hud .help .help-text { display: block; width: 75.75%; transform: scaleX(1.32); transform-origin: 0 0; }
+.hud .help .btn, .hud .help .hud-arrow { display: inline-block; width: 1.2em; height: 1.2em; vertical-align: -0.22em; margin: 0 -0.12em; transform: scaleX(0.76); }
+/* the gameplay block fades as one */
+.hud .main { inset: 0; }
+.hud .main > * { position: absolute; }
+/* weapon slot: the fist plate 40x40 at (502, 23) inside the 47x58 cell left of the clock */
+.hud .fist { left: 78.4cqw; top: 5.1cqh; width: 6.25cqw; height: 8.9cqh; }
+.hud .fist svg { display: block; width: 100%; height: 100%; }
+/* clock and money: Pricedown digits 12.2 px tall (cap top 26.5 / 76.4), right at 608; LIGHT_GRAY / GREEN with a 2 px black edge.
+   logo.pricedownText gives svg.pd cells of 1.32em (the 1em digit plus 0.16em margins) filled currentColor with a black stroke */
+.hud .digits { right: 5cqw; height: 2.72cqh; font-size: 2.72cqh; line-height: 1; white-space: nowrap; transform: scaleX(1.12); transform-origin: 100% 0; }   /* the PS2 runs are 58 / 106 px wide */
+.hud .digits svg.pd { display: inline-block; height: 1.32em; width: auto; vertical-align: top; margin-top: -0.16em; overflow: visible; stroke-width: 30; }
+.hud .digits.txt { font-size: 3.7cqh; line-height: 2.72cqh; letter-spacing: 0.02em; paint-order: stroke fill; -webkit-text-stroke: 0.16em #000; }
+.hud .clock { top: 5.9cqh; color: #E1E1E1; }
+.hud .money { top: 17.05cqh; color: #36682C; }
+/* health: 62x9 at y 61 right-aligned under the clock, RED over the half-brightness remainder, 2 px black border */
+.hud .health { right: 4.85cqw; top: 13.6cqh; width: 9.7cqw; height: 2cqh; box-sizing: border-box; border: var(--edge) solid #000; background: #5a0c0e; }
+.hud .health .fill { position: absolute; left: 0; top: 0; bottom: 0; background: #B4191D; }
+/* radar: the ellipse (centre 87,382; radii 47x38) with its 4 px rim spans x 36-138, y 340-424 */
+.hud .radar { left: 5.625cqw; top: 75.9cqh; width: 15.94cqw; height: 18.75cqh; }
+.hud .radar canvas { display: block; width: 100%; height: 100%; }
+/* zone name: blackletter LIGHT_BLUE, right at 608, baseline at 420; the cap is ≈ 20 px tall */
+.hud .zone { right: 5cqw; top: 93.75cqh; transform: translateY(-0.88em) scaleX(1.3); transform-origin: 100% 0; white-space: nowrap; font-family: var(--gta-black); font-weight: 400; font-size: 6.6cqh; color: #ACCBF1; paint-order: stroke fill; -webkit-text-stroke: 0.09em #000; }
+/* vehicle name: Bank-Gothic-like GREEN, cap 13 px with the text top at 344, right at 608, wide like the original */
+.hud .vehicle { right: 5cqw; top: 78.1cqh; white-space: nowrap; font-family: var(--gta-gothic); font-weight: 400; font-size: 4.1cqh; color: #36682C; letter-spacing: 0.06em; transform: scaleX(1.2); transform-origin: 100% 0; paint-order: stroke fill; -webkit-text-stroke: 0.14em #000; }
+/* mission title: GOLD, heavy lowercase-ish bold sans standing in for Pricedown, right at 620, bottom at 333, sliding in from the right */
+.hud .mission { right: 3.1cqw; top: 74.3cqh; transform: translateY(-0.93em); white-space: nowrap; font-size: 7.4cqh; color: #906210; letter-spacing: -0.02em; paint-order: stroke fill; -webkit-text-stroke: 0.1em #000; }
+.hud .mission svg.pd { height: 0.98em; width: auto; vertical-align: -0.12em; overflow: visible; stroke-width: 22; }   /* a digit cell sized to the sans cap */

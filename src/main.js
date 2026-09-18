@@ -8,6 +8,7 @@ import { MenuScene } from './scenes/menu.js';
 import { OSD } from './osd.js';
 import { loadState, saveState } from './state.js';
 import { seedHistory, advanceHistory } from './history.js';
+import { GameState } from './game/index.js';
 
 const params = new URLSearchParams(location.search);
 const CAPTURE = params.has('capture');
@@ -83,6 +84,7 @@ class App {
 const app = new App();
 app.scenes.boot = new BootScene(app);
 app.scenes.menu = new MenuScene(app);
+app.scenes.game = new GameState(app);   // the disc: everything after the PlayStation 2 logo
 app.console = loadState();
 if (!app.console.history.length || !('mask' in app.console.history[0])) app.console.history = seedHistory();
 app.applyScreenSize();
@@ -98,7 +100,9 @@ app.scenes.menuState = {
 };
 function clearUI() { const ui = app.ui; while (ui.firstChild) ui.removeChild(ui.firstChild); }
 app.resize();
-app.onBootDone = (mode) => { app.setState(app.scenes.menuState, { screen: params.get('screen') || 'main' }); };
+// A disc in the drive boots straight through: the PlayStation 2 logo, then the title takes over (see osd.afterLogo).
+app.onBootDone = (mode) => { if (mode === 'disc') { app.setState(app.scenes.menuState, { screen: 'logo' }); app.sounds?.play('logoHum'); } else app.setState(app.scenes.menuState, { screen: params.get('screen') || 'main' }); };
+app.launchDisc = () => app.setState(app.scenes.game, { phase: params.get('phase') || 'read' });
 function bootConsole() {
   app.console.boots += 1; advanceHistory(app.console, app.rng); saveState(app.console);
   const card = params.get('card') !== '0';
@@ -116,12 +120,13 @@ async function powerOn() {
 if (CAPTURE) {
   app.audio.setMuted(true);
   const st = params.get('state') || 'boot';
-  if (st === 'boot') bootConsole(); else if (st === 'menu') app.setState(app.scenes.menuState, { screen: params.get('screen') || 'main' }); else app.setState(app.scenes.menuState, { screen: 'main' });
+  if (st === 'boot') bootConsole(); else if (st === 'menu') app.setState(app.scenes.menuState, { screen: params.get('screen') || 'main' }); else if (st === 'game') app.setState(app.scenes.game, { phase: params.get('phase') || 'read', t: Number(params.get('t') || 0) }); else app.setState(app.scenes.menuState, { screen: 'main' });
   if (params.get('clock')) { const fixed = new Date(params.get('clock')).getTime(); app.osd.clockOffset = fixed - Date.now(); app.scenes.menu.clockTime = fixed; }
   window.__ps2 = {
     app, ready: true,
     step(seconds, fps = 30) { const n = Math.max(1, Math.round(seconds * fps)); for (let i = 0; i < n; i++) app.step(1 / fps, i === n - 1); },
     press(b) { app.input.press(b, 'harness'); },
+    hold(b, down = true) { app.input.setVirtual(b, down); },
     async renderSound(name) {
       // Renders the named buffer (or the whole no-disc boot mix) to a WAV for offline verification.
       const { bufferToWav } = await import('./audio/engine.js'); await app.sounds.prepare();

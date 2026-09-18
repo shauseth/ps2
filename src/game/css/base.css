@@ -1,0 +1,9 @@
+/* Fonts shipped for the disc: Pirata One (OFL) for every blackletter, Michroma (OFL) for the Bank-Gothic-like face. */
+@font-face { font-family: "Pirata One"; src: url("../../../assets/fonts/PirataOne-Regular.ttf") format("truetype"); font-weight: 400; font-display: block; }
+@font-face { font-family: "Michroma"; src: url("../../../assets/fonts/Michroma-Regular.ttf") format("truetype"); font-weight: 400; font-display: block; }
+:root { --gta-black: "Pirata One", "UnifrakturMaguntia", serif; --gta-gothic: "Michroma", "Bank Gothic", sans-serif; --gta-sans: var(--osd-font); }
+#picture[data-look="game"] #gl { visibility: visible; }
+.game { position: absolute; inset: 0; overflow: hidden; background: transparent; font-family: var(--gta-sans); }
+.game .phase { position: absolute; inset: 0; }
+.game .phase.read, .game .phase.movie, .game .phase.loading { background: #000; }
+.game .stub-label { position: absolute; left: 4cqw; top: 4cqh; font-size: 3cqh; color: #444; }

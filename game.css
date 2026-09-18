@@ -1,0 +1,7 @@
+/* Disc-side styles. Each module owns its own sheet under src/game/css/. */
+@import url("src/game/css/base.css");
+@import url("src/game/css/movie.css");
+@import url("src/game/css/loading.css");
+@import url("src/game/css/hud.css");
+@import url("src/game/css/cutscene.css");
+@import url("src/game/css/play.css");

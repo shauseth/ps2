@@ -1,0 +1,30 @@
+/* movie: owned by the movie module. Layout in % of the 4:3 picture (research/gta-sa-launch.md §2-3). */
+.movie { background: #000; font-family: var(--gta-sans); }
+.movie > * { position: absolute; }
+/* --- badge cards: badge x 29.2-70.5 %, y 16.8-64.2 %, the wordmark line at y 65.2-74.5 %, the ® just off the lower-right corner --- */
+.movie .mv-card { inset: 0; }
+.movie .mv-defs { position: absolute; width: 0; height: 0; overflow: hidden; }
+.movie .badge-wrap { position: absolute; left: 29.2cqw; top: 16.8cqh; width: 41.5cqw; height: 47.6cqh; }
+.movie .badge-wrap svg { display: block; width: 100%; height: 100%; }
+.movie .mv-badge .r-badge-star { fill: var(--star, #fff); }
+.movie .mv-badge.north .r-badge-r { stroke: #d8d8d8; stroke-width: var(--r-stroke, 0); stroke-linejoin: round; paint-order: stroke fill; }
+.movie .wordmark { position: absolute; left: 50cqw; top: 64.2cqh; transform: translateX(-50%); white-space: nowrap; font-family: var(--gta-black); font-size: 9.2cqh; line-height: 1; letter-spacing: 0.01em; color: #d4d3d4; paint-order: stroke fill; -webkit-text-stroke: 0.05em #101010; }
+.movie .north .wordmark { color: #dedddf; }
+.movie .reg { position: absolute; left: 70.9cqw; top: 63.4cqh; font-size: 2cqh; line-height: 1; color: #cfcfcf; }
+/* --- text cards: bold grotesque, cap height ≈ 3.3 % H, a little extended so the string spans 48 % W, centred at 50 % --- */
+.movie .mv-text { left: 50cqw; top: 50cqh; transform: translate(-50%, -50%) scaleX(1.1); white-space: nowrap; font-weight: 700; font-size: calc(3.3cqh / 0.729); line-height: 1; letter-spacing: 0.03em; color: #c8d2ce; }
+/* --- the flash and the SA logo (bbox x 29.3-72.2 %, y 24.4-73.9 %; the GTA word takes the top 53 %) --- */
+.movie .mv-flash { inset: 0; background: #fff; pointer-events: none; }
+.movie .mv-sa { left: 29.3cqw; top: 24.4cqh; width: 42.9cqw; height: 49.5cqh; }
+/* the lockup's internal proportions are logo.js's (its :where(.sa-logo) rules); the box above just places it */
+.movie .mv-sa .sa-logo { position: absolute; inset: 0; }
+/* --- credits: strips are quads cut from one still; titles gold blackletter, names pale mint bold sans, 4 % H pitch --- */
+.movie .mv-credits { inset: 0; }
+.movie .mv-credit-card { position: absolute; inset: 0; }
+.movie .strip, .movie .cut { position: absolute; inset: 0; }
+.movie .pic { position: absolute; background-size: cover; background-position: center; image-rendering: auto; }
+.movie .credit { position: absolute; white-space: nowrap; }
+.movie .credit.right { text-align: right; }
+.movie .credit.center { left: 50cqw; transform: translateX(-50%); text-align: center; }
+.movie .ctitle { font-family: var(--gta-black); font-size: 8cqh; line-height: 0.82; color: #d8c05a; letter-spacing: 0.01em; }
+.movie .cname { font-family: var(--gta-sans); font-weight: 700; font-size: 4cqh; line-height: 4.05cqh; color: #c9d9cc; }
